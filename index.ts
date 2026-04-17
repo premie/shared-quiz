@@ -17,3 +17,17 @@ export type {
   CaseQualifierTheme,
   CaseQualifierProps,
 } from "./types";
+
+export { CaseCalculator } from "./CaseCalculator";
+export { computeResult as computeCalculatorResult } from "./calculator-logic";
+export { submitCalculatorLead } from "./calculator-submit";
+export type {
+  CalculatorInputs,
+  CalculatorResult,
+  SeverityTier,
+  DisqualifyReason,
+  LineItem,
+  AppliedMultiplier,
+  StateMoldLaw,
+  CaseCalculatorProps,
+} from "./calculator-types";
