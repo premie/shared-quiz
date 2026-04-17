@@ -94,7 +94,10 @@ export async function submitLead({
     priority_score: score,
     flags: flags.join(", ") || "None",
     flag_count: flags.length,
-    source: config.source,
+    // Legacy field — Make.com scenario filters on this exact value.
+    // Don't change without updating the scenario.
+    source: "website_qualifier",
+    site: config.source,
     campaign: config.campaign,
     user_agent: typeof navigator !== "undefined" ? navigator.userAgent : "",
     ...sharedMeta,
