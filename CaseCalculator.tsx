@@ -257,7 +257,7 @@ function stepComplete(step: number, inputs: Partial<CalculatorInputs>): boolean 
   const def = STEPS[step];
   return def.questions.every((q) => {
     const v = inputs[q.id];
-    if (q.kind === "radio") return typeof v === "string" && v !== "";
+    if (q.kind === "radio") return typeof v === "string" && v.length > 0;
     // number inputs can be 0 — treat explicit entry as complete once set
     return typeof v === "number" && !Number.isNaN(v);
   });
