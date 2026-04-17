@@ -1,0 +1,11 @@
+{
+  "name": "shared-quiz",
+  "version": "0.1.0",
+  "description": "Shared mold case qualifier quiz used by mold-law-king and conduit-law.",
+  "main": "index.ts",
+  "types": "index.ts",
+  "private": true,
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  }
+}
