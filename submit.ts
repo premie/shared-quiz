@@ -131,12 +131,18 @@ export async function submitLead({
     console.warn("Make.com webhook error:", err);
   }
 
+  // Use fetch with keepalive (not sendBeacon): sendBeacon silently drops
+  // cross-origin JSON posts because it can't issue the CORS preflight that
+  // Content-Type: application/json requires, and there is no return-value
+  // check / retry. keepalive: true survives page unload like a beacon would.
   try {
-    const blob = new Blob([JSON.stringify(conduitPayload)], {
-      type: "application/json",
+    await fetch(config.conduitWebhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(conduitPayload),
+      keepalive: true,
     });
-    navigator.sendBeacon(config.conduitWebhookUrl, blob);
   } catch (err) {
-    console.warn("os-conduit beacon error:", err);
+    console.warn("os-conduit webhook error:", err);
   }
 }
