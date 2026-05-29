@@ -122,12 +122,23 @@ export const QUESTIONS: Question[] = [
     sub: "Our mold expert may need to inspect the property to evaluate your case and document conditions.",
     options: [
       "Yes — I still live or work there",
+      "Yes — but I expect to lose access soon",
       "Yes — I moved out but can still access it",
       "No — but I have a mold inspection report",
       "No — I no longer have access",
       "Not sure",
     ],
     flag: (v) => (v === "No — I no longer have access" ? "NO_UNIT_ACCESS" : null),
+  },
+  {
+    id: "unit_access_loss_date",
+    type: "date",
+    text: "When will or did you lose access to the property?",
+    sub: "If you still have access, enter the date you expect access to end. If you no longer have access, enter the date access ended.",
+    skip: (a) =>
+      !a.unit_access ||
+      a.unit_access === "Yes — I still live or work there" ||
+      a.unit_access === "Not sure",
   },
   {
     id: "evidence",

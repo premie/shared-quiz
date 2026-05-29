@@ -1,11 +1,11 @@
-export type QuestionType = "single" | "multi";
+export type QuestionType = "single" | "multi" | "date";
 
 export interface Question {
   id: string;
   type: QuestionType;
   text: string;
   sub?: string;
-  options: string[];
+  options?: string[];
   flag?: (value: string | string[]) => string | null;
   skip?: (answers: Answers) => boolean;
 }

@@ -94,21 +94,32 @@ export function CaseQualifier({
   const selectOption = useCallback(
     (questionId: string, type: QuestionType, option: string) => {
       setAnswers((prev) => {
+        const next = { ...prev };
         if (type === "multi") {
           const current = (prev[questionId] as string[]) || [];
           const updated = current.includes(option)
             ? current.filter((o) => o !== option)
             : [...current, option];
-          return { ...prev, [questionId]: updated };
+          next[questionId] = updated;
+          return next;
         }
-        return { ...prev, [questionId]: option };
+
+        next[questionId] = option;
+        if (questionId === "unit_access") {
+          delete next.unit_access_loss_date;
+        }
+        return next;
       });
 
       if (type === "single") {
         setTimeout(() => {
           setStep((prev) => {
+            const nextAnswers = { ...answers, [questionId]: option };
+            if (questionId === "unit_access") {
+              delete nextAnswers.unit_access_loss_date;
+            }
             const qs = QUESTIONS.filter(
-              (q) => !q.skip || !q.skip({ ...answers, [questionId]: option }),
+              (q) => !q.skip || !q.skip(nextAnswers),
             );
             if (prev + 1 >= qs.length) {
               setPhase("contact");
@@ -239,37 +250,51 @@ export function CaseQualifier({
                   <p className="text-sm text-gray-500 mb-6">{currentQ.sub}</p>
                 )}
 
-                <div className="flex flex-col gap-3">
-                  {currentQ.options.map((opt, i) => {
-                    const selected = isSelected(opt);
-                    return (
-                      <button
-                        key={opt}
-                        onClick={() =>
-                          selectOption(currentQ.id, currentQ.type, opt)
-                        }
-                        className={`flex items-center gap-3 px-4 py-3.5 rounded-xl border-2 text-left text-sm font-medium transition-all ${
-                          selected
-                            ? "text-gray-900"
-                            : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
-                        }`}
-                        style={selected ? selectedOptionStyle : undefined}
-                      >
-                        <span
-                          className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all ${
+                {currentQ.type === "date" ? (
+                  <input
+                    type="date"
+                    value={(currentAnswer as string) || ""}
+                    onChange={(e) =>
+                      setAnswers((prev) => ({
+                        ...prev,
+                        [currentQ.id]: e.target.value,
+                      }))
+                    }
+                    className="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 bg-white text-gray-900 text-sm font-medium transition-all outline-none focus:border-gray-400"
+                  />
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    {(currentQ.options || []).map((opt, i) => {
+                      const selected = isSelected(opt);
+                      return (
+                        <button
+                          key={opt}
+                          onClick={() =>
+                            selectOption(currentQ.id, currentQ.type, opt)
+                          }
+                          className={`flex items-center gap-3 px-4 py-3.5 rounded-xl border-2 text-left text-sm font-medium transition-all ${
                             selected
-                              ? ""
-                              : "border-2 border-gray-300 text-gray-400"
+                              ? "text-gray-900"
+                              : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
                           }`}
-                          style={selected ? selectedBadgeStyle : undefined}
+                          style={selected ? selectedOptionStyle : undefined}
                         >
-                          {letters[i]}
-                        </span>
-                        <span>{opt}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+                          <span
+                            className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all ${
+                              selected
+                                ? ""
+                                : "border-2 border-gray-300 text-gray-400"
+                            }`}
+                            style={selected ? selectedBadgeStyle : undefined}
+                          >
+                            {letters[i]}
+                          </span>
+                          <span>{opt}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
 
                 <div className="flex justify-between items-center mt-7">
                   {step > 0 ? (
@@ -282,7 +307,7 @@ export function CaseQualifier({
                   ) : (
                     <div />
                   )}
-                  {currentQ.type === "multi" && (
+                  {(currentQ.type === "multi" || currentQ.type === "date") && (
                     <button
                       onClick={goNext}
                       disabled={!canAdvance}

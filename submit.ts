@@ -46,6 +46,9 @@ export async function submitLead({
     `Notified party: ${answers.notified || "—"}`,
     answers.response ? `Response: ${answers.response}` : null,
     `Unit access: ${answers.unit_access || "—"}`,
+    answers.unit_access_loss_date
+      ? `Unit access loss date: ${answers.unit_access_loss_date}`
+      : null,
     `Evidence: ${
       Array.isArray(answers.evidence)
         ? answers.evidence.join(", ")
