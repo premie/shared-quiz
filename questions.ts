@@ -128,7 +128,14 @@ export const QUESTIONS: Question[] = [
       "No — I no longer have access",
       "Not sure",
     ],
-    flag: (v) => (v === "No — I no longer have access" ? "NO_UNIT_ACCESS" : null),
+    flag: (v) => {
+      if (v === "Yes — but I expect to lose access soon") return "UNIT_ACCESS_AT_RISK";
+      if (v === "Yes — I moved out but can still access it") return "UNIT_ACCESS_LIMITED";
+      if (v === "No — but I have a mold inspection report" || v === "No — I no longer have access") {
+        return "NO_UNIT_ACCESS";
+      }
+      return null;
+    },
   },
   {
     id: "unit_access_loss_date",
@@ -171,6 +178,8 @@ const FLAG_WEIGHTS: Record<string, number> = {
   NO_MEDICAL_TREATMENT: 1,
   NO_NOTICE: 1,
   VERBAL_NOTICE_ONLY: 1,
+  UNIT_ACCESS_AT_RISK: 0,
+  UNIT_ACCESS_LIMITED: 0,
   NO_UNIT_ACCESS: 2,
   NO_EVIDENCE: 1,
   UNUSUAL_PROPERTY_TYPE: 1,
@@ -189,7 +198,7 @@ export function computeFlags(answers: Answers): string[] {
 
 export function computeScore(flags: string[]): number {
   const totalWeight = flags.reduce(
-    (sum, f) => sum + (FLAG_WEIGHTS[f] || 1),
+    (sum, f) => sum + (FLAG_WEIGHTS[f] ?? 1),
     0
   );
   return Math.max(0, 10 - totalWeight);

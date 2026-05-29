@@ -97,6 +97,8 @@ export async function submitLead({
     priority_score: score,
     flags: flags.join(", ") || "None",
     flag_count: flags.length,
+    unit_access: answers.unit_access || "",
+    unit_access_loss_date: answers.unit_access_loss_date || "",
     // Legacy field — Make.com scenario filters on this exact value.
     // Don't change without updating the scenario.
     source: "website_qualifier",
@@ -115,6 +117,8 @@ export async function submitLead({
     practice_area: "mold",
     injury_type: "mold_exposure",
     description: descLines,
+    unit_access: answers.unit_access || null,
+    unit_access_loss_date: answers.unit_access_loss_date || null,
     campaign: config.campaign,
     ...sharedMeta,
     quiz_answers: answers,
