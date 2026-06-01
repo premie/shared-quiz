@@ -5,6 +5,7 @@ export interface ContactData {
   name: string;
   phone: string;
   email: string;
+  unitAddress: string;
   city: string;
   notes: string;
 }
@@ -40,6 +41,7 @@ export async function submitLead({
     "",
     `Property: ${answers.property_type || "—"}`,
     `State: ${answers.state || "—"}`,
+    `Contaminated unit address: ${contact.unitAddress.trim() || "—"}`,
     `Timeline: ${answers.noticed_when || "—"}`,
     `Health injury: ${answers.injury || "—"}`,
     answers.doctor ? `Seen doctor: ${answers.doctor}` : null,
@@ -83,6 +85,9 @@ export async function submitLead({
     name: contact.name,
     phone: contact.phone,
     email: contact.email,
+    address: contact.unitAddress.trim(),
+    property_address: contact.unitAddress.trim(),
+    contaminated_unit_address: contact.unitAddress.trim(),
     city: contact.city,
     notes: contact.notes,
     ...flatAnswers,
@@ -112,6 +117,9 @@ export async function submitLead({
     name: contact.name,
     phone: contact.phone,
     email: contact.email,
+    address: contact.unitAddress.trim(),
+    property_address: contact.unitAddress.trim(),
+    contaminated_unit_address: contact.unitAddress.trim(),
     city: contact.city,
     state: stateCode,
     practice_area: "mold",

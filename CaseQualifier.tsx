@@ -67,6 +67,7 @@ export function CaseQualifier({
     name: "",
     phone: "",
     email: "",
+    unitAddress: "",
     city: "",
     notes: "",
   });
@@ -163,7 +164,13 @@ export function CaseQualifier({
   };
 
   const handleSubmit = async () => {
-    if (!contactData.name || !contactData.phone || !contactData.email) return;
+    if (
+      !contactData.name ||
+      !contactData.phone ||
+      !contactData.email ||
+      !contactData.unitAddress.trim()
+    )
+      return;
     setSubmitting(true);
 
     const flags = computeFlags(answers);
@@ -401,6 +408,28 @@ export function CaseQualifier({
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Contaminated Unit Address *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      className="w-full px-4 py-3 rounded-lg border border-gray-300 transition-all outline-none"
+                      placeholder="Street address, unit #, city, state, ZIP"
+                      value={contactData.unitAddress}
+                      onChange={(e) =>
+                        setContactData({
+                          ...contactData,
+                          unitAddress: e.target.value,
+                        })
+                      }
+                    />
+                    <p className="mt-1 text-xs text-gray-500">
+                      This is the address of the contaminated unit/property our
+                      mold expert may need to inspect.
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
                       City &amp; State of Property
                     </label>
                     <input
@@ -453,6 +482,7 @@ export function CaseQualifier({
                       !contactData.name ||
                       !isValidPhone(contactData.phone) ||
                       !isValidEmail(contactData.email) ||
+                      !contactData.unitAddress.trim() ||
                       !consentShare
                     }
                     className="w-full text-center font-bold py-3.5 px-6 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
