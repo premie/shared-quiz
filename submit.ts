@@ -30,11 +30,6 @@ export async function submitLead({
   score,
   flags,
 }: SubmitArgs): Promise<void> {
-  const flatAnswers: Record<string, string> = {};
-  for (const [key, val] of Object.entries(answers)) {
-    flatAnswers[`q_${key}`] = Array.isArray(val) ? val.join(", ") : val;
-  }
-
   const descLines = [
     `Tier: ${tier} (score ${score}/10)`,
     flags.length > 0 ? `Flags: ${flags.join(", ")}` : "Flags: None",
@@ -67,12 +62,9 @@ export async function submitLead({
   const fullName = `${contact.firstName.trim()} ${contact.lastName.trim()}`
     .replace(/\s+/g, " ")
     .trim();
+  // os-conduit receives city + state as separate fields and composes the
+  // "Brighton, CO" location line in its lead notification.
   const cityClean = contact.city.trim();
-  // The lead email renders a single location line from `city`. Append the state
-  // already captured by the quiz so it reads "Brighton, CO" instead of a
-  // half-typed free-text string.
-  const cityState =
-    cityClean && stateCode ? `${cityClean}, ${stateCode}` : cityClean;
 
   const searchParams =
     typeof window !== "undefined"
@@ -90,41 +82,6 @@ export async function submitLead({
     utm_medium: searchParams?.get("utm_medium") || "",
     utm_campaign: searchParams?.get("utm_campaign") || "",
     utm_content: searchParams?.get("utm_content") || "",
-  };
-
-  const makePayload = {
-    name: fullName,
-    first_name: contact.firstName.trim(),
-    last_name: contact.lastName.trim(),
-    phone: contact.phone,
-    email: contact.email,
-    address: contact.unitAddress.trim(),
-    property_address: contact.unitAddress.trim(),
-    contaminated_unit_address: contact.unitAddress.trim(),
-    city: cityState,
-    state: stateCode,
-    notes: contact.notes,
-    ...flatAnswers,
-    consent_expert_share: consentShare ? "Yes" : "No",
-    tier,
-    tier_color:
-      tier === "strong"
-        ? "#16a34a"
-        : tier === "promising"
-          ? "#d97706"
-          : "#6b7280",
-    priority_score: score,
-    flags: flags.join(", ") || "None",
-    flag_count: flags.length,
-    unit_access: answers.unit_access || "",
-    unit_access_loss_date: answers.unit_access_loss_date || "",
-    // Legacy field — Make.com scenario filters on this exact value.
-    // Don't change without updating the scenario.
-    source: "website_qualifier",
-    site: config.source,
-    campaign: config.campaign,
-    user_agent: typeof navigator !== "undefined" ? navigator.userAgent : "",
-    ...sharedMeta,
   };
 
   const conduitPayload = {
@@ -151,16 +108,6 @@ export async function submitLead({
     flags,
     consent_expert_share: consentShare,
   };
-
-  try {
-    await fetch(config.formWebhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(makePayload),
-    });
-  } catch (err) {
-    console.warn("Make.com webhook error:", err);
-  }
 
   // Use fetch with keepalive (not sendBeacon): sendBeacon silently drops
   // cross-origin JSON posts because it can't issue the CORS preflight that

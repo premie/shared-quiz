@@ -26,22 +26,13 @@ export async function submitCalculatorLead({
   contact,
   consentShare,
 }: CalculatorSubmitArgs): Promise<void> {
-  const flatInputs: Record<string, string | number> = {};
-  for (const [key, val] of Object.entries(inputs)) {
-    flatInputs[`i_${key}`] =
-      typeof val === "number" ? val : String(val ?? "");
-  }
-
   const stateCode = STATE_LAW[inputs.state]?.abbrev || null;
 
   const fullName = `${contact.firstName.trim()} ${contact.lastName.trim()}`
     .replace(/\s+/g, " ")
     .trim();
+  // os-conduit receives city + state separately and composes the location line.
   const cityClean = contact.city.trim();
-  // Lead email renders one location line from `city`; append the state already
-  // captured by the calculator so it reads "Brighton, CO".
-  const cityState =
-    cityClean && stateCode ? `${cityClean}, ${stateCode}` : cityClean;
 
   const rangeLow = result.type === "estimate" ? result.range.low : null;
   const rangeHigh = result.type === "estimate" ? result.range.high : null;
@@ -100,30 +91,6 @@ export async function submitCalculatorLead({
     utm_content: searchParams?.get("utm_content") || "",
   };
 
-  const makePayload = {
-    name: fullName,
-    first_name: contact.firstName.trim(),
-    last_name: contact.lastName.trim(),
-    phone: contact.phone,
-    email: contact.email,
-    city: cityState,
-    state: stateCode,
-    notes: contact.notes,
-    ...flatInputs,
-    consent_expert_share: consentShare ? "Yes" : "No",
-    tool: "mold-calculator",
-    result_type: result.type,
-    tier,
-    estimated_range_low: rangeLow,
-    estimated_range_high: rangeHigh,
-    // Legacy field — Make.com scenario filters on this exact value.
-    source: "website_qualifier",
-    site: config.source,
-    campaign: config.campaign,
-    user_agent: typeof navigator !== "undefined" ? navigator.userAgent : "",
-    ...sharedMeta,
-  };
-
   const conduitPayload = {
     name: fullName,
     first_name: contact.firstName.trim(),
@@ -141,16 +108,6 @@ export async function submitCalculatorLead({
     calculator_result: result,
     consent_expert_share: consentShare,
   };
-
-  try {
-    await fetch(config.formWebhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(makePayload),
-    });
-  } catch (err) {
-    console.warn("Make.com webhook error:", err);
-  }
 
   try {
     const blob = new Blob([JSON.stringify(conduitPayload)], {

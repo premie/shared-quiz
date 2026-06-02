@@ -15,7 +15,13 @@ export type Answers = Record<string, string | string[]>;
 export type Tier = "strong" | "promising" | "unlikely";
 
 export interface CaseQualifierConfig {
-  formWebhookUrl: string;
+  /**
+   * @deprecated Make.com lead notification was retired 2026-06-01 — leads now
+   * flow only to os-conduit (conduitWebhookUrl), which sends the notification.
+   * No longer read by submit.ts / calculator-submit.ts; kept optional so
+   * existing callers don't break.
+   */
+  formWebhookUrl?: string;
   conduitWebhookUrl: string;
   source: "mlk" | "conduit";
   campaign: string;
