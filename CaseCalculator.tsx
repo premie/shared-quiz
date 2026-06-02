@@ -302,7 +302,8 @@ export function CaseCalculator({
   const [visibleSteps, setVisibleSteps] = useState(1);
   const [result, setResult] = useState<CalculatorResult | null>(null);
   const [contact, setContact] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     phone: "",
     email: "",
     city: "",
@@ -371,9 +372,11 @@ export function CaseCalculator({
 
   const handleSubmit = async () => {
     if (
-      !contact.name ||
+      !contact.firstName.trim() ||
+      !contact.lastName.trim() ||
       !isValidPhone(contact.phone) ||
       !isValidEmail(contact.email) ||
+      !contact.city.trim() ||
       !consentShare ||
       !result
     )
@@ -625,15 +628,26 @@ export function CaseCalculator({
                     out to walk through your specific facts.
                   </p>
                   <div className="space-y-4">
-                    <input
-                      type="text"
-                      placeholder="Full name *"
-                      value={contact.name}
-                      onChange={(e) =>
-                        setContact({ ...contact, name: e.target.value })
-                      }
-                      className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none"
-                    />
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <input
+                        type="text"
+                        placeholder="First name *"
+                        value={contact.firstName}
+                        onChange={(e) =>
+                          setContact({ ...contact, firstName: e.target.value })
+                        }
+                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Last name *"
+                        value={contact.lastName}
+                        onChange={(e) =>
+                          setContact({ ...contact, lastName: e.target.value })
+                        }
+                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none"
+                      />
+                    </div>
                     <div className="grid sm:grid-cols-2 gap-4">
                       <input
                         type="tel"
@@ -672,7 +686,7 @@ export function CaseCalculator({
                     </div>
                     <input
                       type="text"
-                      placeholder="City & state of the property (optional)"
+                      placeholder="City of the property *"
                       value={contact.city}
                       onChange={(e) =>
                         setContact({ ...contact, city: e.target.value })
@@ -708,9 +722,11 @@ export function CaseCalculator({
                       onClick={handleSubmit}
                       disabled={
                         submitting ||
-                        !contact.name ||
+                        !contact.firstName.trim() ||
+                        !contact.lastName.trim() ||
                         !isValidPhone(contact.phone) ||
                         !isValidEmail(contact.email) ||
+                        !contact.city.trim() ||
                         !consentShare
                       }
                       className="w-full font-bold py-3.5 px-6 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
@@ -734,7 +750,7 @@ export function CaseCalculator({
                   We&apos;ve Got Your Info
                 </h3>
                 <p className="text-gray-600 mb-6">
-                  Thank you, {contact.name.split(" ")[0]}. A member of our team
+                  Thank you, {contact.firstName}. A member of our team
                   will review your answers and reach out within{" "}
                   <strong>1 business day</strong>.
                 </p>

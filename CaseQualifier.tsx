@@ -64,7 +64,8 @@ export function CaseQualifier({
   const [phase, setPhase] = useState<"quiz" | "contact" | "done">("quiz");
   const [submitting, setSubmitting] = useState(false);
   const [contactData, setContactData] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     phone: "",
     email: "",
     unitAddress: "",
@@ -165,10 +166,12 @@ export function CaseQualifier({
 
   const handleSubmit = async () => {
     if (
-      !contactData.name ||
+      !contactData.firstName.trim() ||
+      !contactData.lastName.trim() ||
       !contactData.phone ||
       !contactData.email ||
-      !contactData.unitAddress.trim()
+      !contactData.unitAddress.trim() ||
+      !contactData.city.trim()
     )
       return;
     setSubmitting(true);
@@ -340,23 +343,49 @@ export function CaseQualifier({
                 </p>
 
                 <div className="text-left space-y-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      Full Name *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 transition-all"
-                      style={{
-                        ["--tw-ring-color" as string]: t.accentSoftBg,
-                      }}
-                      placeholder="Your full name"
-                      value={contactData.name}
-                      onChange={(e) =>
-                        setContactData({ ...contactData, name: e.target.value })
-                      }
-                    />
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">
+                        First Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 transition-all"
+                        style={{
+                          ["--tw-ring-color" as string]: t.accentSoftBg,
+                        }}
+                        placeholder="First name"
+                        value={contactData.firstName}
+                        onChange={(e) =>
+                          setContactData({
+                            ...contactData,
+                            firstName: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">
+                        Last Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 transition-all"
+                        style={{
+                          ["--tw-ring-color" as string]: t.accentSoftBg,
+                        }}
+                        placeholder="Last name"
+                        value={contactData.lastName}
+                        onChange={(e) =>
+                          setContactData({
+                            ...contactData,
+                            lastName: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
                   </div>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
@@ -430,17 +459,21 @@ export function CaseQualifier({
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      City &amp; State of Property
+                      City *
                     </label>
                     <input
                       type="text"
+                      required
                       className="w-full px-4 py-3 rounded-lg border border-gray-300 transition-all outline-none"
-                      placeholder="Denver, CO"
+                      placeholder="Brighton"
                       value={contactData.city}
                       onChange={(e) =>
                         setContactData({ ...contactData, city: e.target.value })
                       }
                     />
+                    <p className="mt-1 text-xs text-gray-500">
+                      We&apos;ll use the state from your earlier answer.
+                    </p>
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">
@@ -479,10 +512,12 @@ export function CaseQualifier({
                     onClick={handleSubmit}
                     disabled={
                       submitting ||
-                      !contactData.name ||
+                      !contactData.firstName.trim() ||
+                      !contactData.lastName.trim() ||
                       !isValidPhone(contactData.phone) ||
                       !isValidEmail(contactData.email) ||
                       !contactData.unitAddress.trim() ||
+                      !contactData.city.trim() ||
                       !consentShare
                     }
                     className="w-full text-center font-bold py-3.5 px-6 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
@@ -517,7 +552,7 @@ export function CaseQualifier({
                   We&apos;ve Got Your Info
                 </h3>
                 <p className="text-gray-600 mb-6">
-                  Thank you, {contactData.name.split(" ")[0]}. A member of our
+                  Thank you, {contactData.firstName}. A member of our
                   team will review your answers and reach out within{" "}
                   <strong>1 business day</strong>.
                 </p>

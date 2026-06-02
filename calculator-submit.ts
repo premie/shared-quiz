@@ -3,7 +3,8 @@ import type { CalculatorInputs, CalculatorResult } from "./calculator-types";
 import { STATE_LAW } from "./calculator-logic";
 
 export interface CalculatorContact {
-  name: string;
+  firstName: string;
+  lastName: string;
   phone: string;
   email: string;
   city: string;
@@ -32,6 +33,15 @@ export async function submitCalculatorLead({
   }
 
   const stateCode = STATE_LAW[inputs.state]?.abbrev || null;
+
+  const fullName = `${contact.firstName.trim()} ${contact.lastName.trim()}`
+    .replace(/\s+/g, " ")
+    .trim();
+  const cityClean = contact.city.trim();
+  // Lead email renders one location line from `city`; append the state already
+  // captured by the calculator so it reads "Brighton, CO".
+  const cityState =
+    cityClean && stateCode ? `${cityClean}, ${stateCode}` : cityClean;
 
   const rangeLow = result.type === "estimate" ? result.range.low : null;
   const rangeHigh = result.type === "estimate" ? result.range.high : null;
@@ -91,10 +101,13 @@ export async function submitCalculatorLead({
   };
 
   const makePayload = {
-    name: contact.name,
+    name: fullName,
+    first_name: contact.firstName.trim(),
+    last_name: contact.lastName.trim(),
     phone: contact.phone,
     email: contact.email,
-    city: contact.city,
+    city: cityState,
+    state: stateCode,
     notes: contact.notes,
     ...flatInputs,
     consent_expert_share: consentShare ? "Yes" : "No",
@@ -112,10 +125,12 @@ export async function submitCalculatorLead({
   };
 
   const conduitPayload = {
-    name: contact.name,
+    name: fullName,
+    first_name: contact.firstName.trim(),
+    last_name: contact.lastName.trim(),
     phone: contact.phone,
     email: contact.email,
-    city: contact.city,
+    city: cityClean,
     state: stateCode,
     practice_area: "mold",
     injury_type: "mold_exposure",

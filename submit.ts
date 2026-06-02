@@ -2,7 +2,8 @@ import type { Answers, CaseQualifierConfig, Tier } from "./types";
 import { STATE_CODES } from "./questions";
 
 export interface ContactData {
-  name: string;
+  firstName: string;
+  lastName: string;
   phone: string;
   email: string;
   unitAddress: string;
@@ -63,6 +64,16 @@ export async function submitLead({
 
   const stateCode = STATE_CODES[answers.state as string] || null;
 
+  const fullName = `${contact.firstName.trim()} ${contact.lastName.trim()}`
+    .replace(/\s+/g, " ")
+    .trim();
+  const cityClean = contact.city.trim();
+  // The lead email renders a single location line from `city`. Append the state
+  // already captured by the quiz so it reads "Brighton, CO" instead of a
+  // half-typed free-text string.
+  const cityState =
+    cityClean && stateCode ? `${cityClean}, ${stateCode}` : cityClean;
+
   const searchParams =
     typeof window !== "undefined"
       ? new URLSearchParams(window.location.search)
@@ -82,13 +93,16 @@ export async function submitLead({
   };
 
   const makePayload = {
-    name: contact.name,
+    name: fullName,
+    first_name: contact.firstName.trim(),
+    last_name: contact.lastName.trim(),
     phone: contact.phone,
     email: contact.email,
     address: contact.unitAddress.trim(),
     property_address: contact.unitAddress.trim(),
     contaminated_unit_address: contact.unitAddress.trim(),
-    city: contact.city,
+    city: cityState,
+    state: stateCode,
     notes: contact.notes,
     ...flatAnswers,
     consent_expert_share: consentShare ? "Yes" : "No",
@@ -114,13 +128,15 @@ export async function submitLead({
   };
 
   const conduitPayload = {
-    name: contact.name,
+    name: fullName,
+    first_name: contact.firstName.trim(),
+    last_name: contact.lastName.trim(),
     phone: contact.phone,
     email: contact.email,
     address: contact.unitAddress.trim(),
     property_address: contact.unitAddress.trim(),
     contaminated_unit_address: contact.unitAddress.trim(),
-    city: contact.city,
+    city: cityClean,
     state: stateCode,
     practice_area: "mold",
     injury_type: "mold_exposure",
