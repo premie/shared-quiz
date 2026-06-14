@@ -1,5 +1,6 @@
 import type { Answers, CaseQualifierConfig, Tier } from "./types";
 import { STATE_CODES } from "./questions";
+import { captureAttribution } from "./attribution";
 
 export interface ContactData {
   name: string;
@@ -79,6 +80,9 @@ export async function submitLead({
     utm_medium: searchParams?.get("utm_medium") || "",
     utm_campaign: searchParams?.get("utm_campaign") || "",
     utm_content: searchParams?.get("utm_content") || "",
+    // Paid-ads click IDs (gclid/…) + GA4 client_id — for offline conversion
+    // import and server-side Measurement Protocol session join.
+    ...captureAttribution(),
   };
 
   const makePayload = {
