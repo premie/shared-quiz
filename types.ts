@@ -25,6 +25,13 @@ export interface CaseQualifierConfig {
   conduitWebhookUrl: string;
   source: "mlk" | "conduit";
   campaign: string;
+  /**
+   * Per-site fallback contact shown if a submission can't be delivered after
+   * retries, so a lead is never silently lost — the visitor is told how to
+   * reach this site's office directly. Optional; omit to show a generic prompt.
+   */
+  fallbackPhone?: string;
+  fallbackEmail?: string;
 }
 
 export interface CaseQualifierTheme {

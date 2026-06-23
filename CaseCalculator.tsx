@@ -311,6 +311,7 @@ export function CaseCalculator({
   });
   const [consentShare, setConsentShare] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [submitFailed, setSubmitFailed] = useState(false);
 
   const allStepsComplete = STEPS.every((_, i) => stepComplete(i, inputs));
 
@@ -382,15 +383,23 @@ export function CaseCalculator({
     )
       return;
     setSubmitting(true);
-    await submitCalculatorLead({
-      config,
-      inputs: inputs as CalculatorInputs,
-      result,
-      contact,
-      consentShare,
-    });
-    setPhase("done");
-    setSubmitting(false);
+    setSubmitFailed(false);
+    try {
+      await submitCalculatorLead({
+        config,
+        inputs: inputs as CalculatorInputs,
+        result,
+        contact,
+        consentShare,
+      });
+      setPhase("done");
+    } catch (err) {
+      // Delivery failed after retries — never show a false confirmation.
+      console.error("Calculator submission failed:", err);
+      setSubmitFailed(true);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const renderStep = (def: StepDef, idx: number) => (
@@ -717,6 +726,49 @@ export function CaseCalculator({
                         </span>
                       </label>
                     </div>
+
+                    {submitFailed && (
+                      <div
+                        role="alert"
+                        className="rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-800"
+                      >
+                        <p className="font-semibold">
+                          We couldn&apos;t send your information.
+                        </p>
+                        <p className="mt-1">
+                          Please tap{" "}
+                          <strong>&quot;Send My Information&quot;</strong> again.
+                          If it still won&apos;t go through, contact us directly
+                          so we don&apos;t lose your details
+                          {config.fallbackPhone || config.fallbackEmail
+                            ? ":"
+                            : "."}
+                        </p>
+                        {(config.fallbackPhone || config.fallbackEmail) && (
+                          <p className="mt-2 font-semibold">
+                            {config.fallbackPhone && (
+                              <a
+                                href={`tel:${config.fallbackPhone.replace(/[^\d+]/g, "")}`}
+                                className="underline"
+                              >
+                                {config.fallbackPhone}
+                              </a>
+                            )}
+                            {config.fallbackPhone &&
+                              config.fallbackEmail &&
+                              " · "}
+                            {config.fallbackEmail && (
+                              <a
+                                href={`mailto:${config.fallbackEmail}`}
+                                className="underline"
+                              >
+                                {config.fallbackEmail}
+                              </a>
+                            )}
+                          </p>
+                        )}
+                      </div>
+                    )}
 
                     <button
                       onClick={handleSubmit}

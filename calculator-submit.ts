@@ -2,6 +2,7 @@ import type { CaseQualifierConfig } from "./types";
 import type { CalculatorInputs, CalculatorResult } from "./calculator-types";
 import { STATE_LAW } from "./calculator-logic";
 import { captureAttribution } from "./attribution";
+import { deliverLead } from "./deliver";
 
 export interface CalculatorContact {
   firstName: string;
@@ -113,12 +114,8 @@ export async function submitCalculatorLead({
     consent_expert_share: consentShare,
   };
 
-  try {
-    const blob = new Blob([JSON.stringify(conduitPayload)], {
-      type: "application/json",
-    });
-    navigator.sendBeacon(config.conduitWebhookUrl, blob);
-  } catch (err) {
-    console.warn("os-conduit beacon error:", err);
-  }
+  // Deliver via the shared hardened path (verified + retried). Throws on final
+  // failure so the calculator UI can show a real fallback instead of pretending
+  // it worked — sendBeacon (the old path) silently dropped the JSON POST.
+  await deliverLead(config.conduitWebhookUrl, conduitPayload);
 }

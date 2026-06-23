@@ -1,6 +1,7 @@
 import type { Answers, CaseQualifierConfig, Tier } from "./types";
 import { STATE_CODES } from "./questions";
 import { captureAttribution } from "./attribution";
+import { deliverLead } from "./deliver";
 
 export interface ContactData {
   firstName: string;
@@ -113,18 +114,7 @@ export async function submitLead({
     consent_expert_share: consentShare,
   };
 
-  // Use fetch with keepalive (not sendBeacon): sendBeacon silently drops
-  // cross-origin JSON posts because it can't issue the CORS preflight that
-  // Content-Type: application/json requires, and there is no return-value
-  // check / retry. keepalive: true survives page unload like a beacon would.
-  try {
-    await fetch(config.conduitWebhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(conduitPayload),
-      keepalive: true,
-    });
-  } catch (err) {
-    console.warn("os-conduit webhook error:", err);
-  }
+  // Deliver to the single central receiver via the shared hardened path.
+  // Throws on final failure so the caller shows a real fallback (see deliver.ts).
+  await deliverLead(config.conduitWebhookUrl, conduitPayload);
 }

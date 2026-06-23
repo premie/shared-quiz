@@ -63,6 +63,7 @@ export function CaseQualifier({
   const [answers, setAnswers] = useState<Answers>({});
   const [phase, setPhase] = useState<"quiz" | "contact" | "done">("quiz");
   const [submitting, setSubmitting] = useState(false);
+  const [submitFailed, setSubmitFailed] = useState(false);
   const [contactData, setContactData] = useState({
     firstName: "",
     lastName: "",
@@ -175,23 +176,32 @@ export function CaseQualifier({
     )
       return;
     setSubmitting(true);
+    setSubmitFailed(false);
 
     const flags = computeFlags(answers);
     const score = computeScore(flags);
     const tier = getTier(flags, score);
 
-    await submitLead({
-      config,
-      answers,
-      contact: contactData,
-      consentShare,
-      tier,
-      score,
-      flags,
-    });
-
-    setPhase("done");
-    setSubmitting(false);
+    try {
+      await submitLead({
+        config,
+        answers,
+        contact: contactData,
+        consentShare,
+        tier,
+        score,
+        flags,
+      });
+      setPhase("done");
+    } catch (err) {
+      // Delivery failed after retries — never show a false "thank you".
+      // Surface a real fallback so the visitor can still reach us and the
+      // lead isn't lost.
+      console.error("Case qualifier submission failed:", err);
+      setSubmitFailed(true);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const flags = computeFlags(answers);
@@ -507,6 +517,45 @@ export function CaseQualifier({
                       </span>
                     </label>
                   </div>
+
+                  {submitFailed && (
+                    <div
+                      role="alert"
+                      className="rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-800"
+                    >
+                      <p className="font-semibold">
+                        We couldn&apos;t submit your answers.
+                      </p>
+                      <p className="mt-1">
+                        Please tap{" "}
+                        <strong>&quot;Submit My Case Information&quot;</strong>{" "}
+                        again. If it still won&apos;t go through, contact us
+                        directly so we don&apos;t lose your details
+                        {config.fallbackPhone || config.fallbackEmail ? ":" : "."}
+                      </p>
+                      {(config.fallbackPhone || config.fallbackEmail) && (
+                        <p className="mt-2 font-semibold">
+                          {config.fallbackPhone && (
+                            <a
+                              href={`tel:${config.fallbackPhone.replace(/[^\d+]/g, "")}`}
+                              className="underline"
+                            >
+                              {config.fallbackPhone}
+                            </a>
+                          )}
+                          {config.fallbackPhone && config.fallbackEmail && " · "}
+                          {config.fallbackEmail && (
+                            <a
+                              href={`mailto:${config.fallbackEmail}`}
+                              className="underline"
+                            >
+                              {config.fallbackEmail}
+                            </a>
+                          )}
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   <button
                     onClick={handleSubmit}
