@@ -1,3 +1,20 @@
+// Generic qualifier engine (the King-network standard; config-driven per site).
+export { Qualifier } from "./Qualifier";
+export type {
+  QualifierConfig,
+  QualifierTheme,
+  QualifierProps,
+  QualifierIntro,
+  QualifierBrand,
+  QQuestion,
+  QField,
+  QType,
+  FieldKind,
+  QResult,
+  Answers as EngineAnswers,
+} from "./engine-types";
+
+// Legacy mold-specific qualifier (still vendored by mold-law-king until migrated).
 export { CaseQualifier, default } from "./CaseQualifier";
 export {
   QUESTIONS,
