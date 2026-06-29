@@ -179,7 +179,13 @@ export function Qualifier({ config, theme }: QualifierProps) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col text-white" style={{ background: `radial-gradient(120% 90% at 50% -10%, ${theme.pageGradFrom} 0%, ${theme.pageGradTo} 60%)` }}>
+    <div
+      className="min-h-screen flex flex-col text-white"
+      // Inline color is a safety net: some host apps default body text to a dark
+      // brand color, so we never want to rely solely on the `text-white` utility
+      // being generated (it lives in this vendored file).
+      style={{ color: "#fff", background: `radial-gradient(120% 90% at 50% -10%, ${theme.pageGradFrom} 0%, ${theme.pageGradTo} 60%)` }}
+    >
       {/* header */}
       <header className="flex items-center justify-between w-full max-w-[760px] mx-auto px-6 py-[18px]">
         <a href={brand.homeHref ?? "/"} className="flex items-center gap-2.5 no-underline text-white">
@@ -249,7 +255,7 @@ export function Qualifier({ config, theme }: QualifierProps) {
                     const sel = Array.isArray(a[q.id]) && (a[q.id] as string[]).includes(opt);
                     return (
                       <button key={opt} type="button" onClick={() => toggle(q.id, opt)} className="w-full text-left cursor-pointer font-sans text-[1.02rem] font-semibold text-white px-5 py-[18px] rounded-xl transition-all flex items-center gap-3.5" style={optionStyle(sel)}>
-                        <span className="flex-none w-6 h-6 rounded-[7px] inline-flex items-center justify-center text-[0.9rem] font-extrabold" style={{ color: theme.accentText, background: sel ? theme.accent : "transparent", border: `1px solid ${sel ? theme.accent : "rgba(255,255,255,0.3)"}` }}>
+                        <span className="flex-none rounded-[7px] inline-flex items-center justify-center text-[0.9rem] font-extrabold" style={{ width: 24, height: 24, color: theme.accentText, background: sel ? theme.accent : "transparent", border: `1px solid ${sel ? theme.accent : "rgba(255,255,255,0.3)"}` }}>
                           {sel ? "✓" : ""}
                         </span>
                         <span>{opt}</span>

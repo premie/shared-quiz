@@ -48,3 +48,7 @@ EOF
 
 echo "Synced engine -> $DEST"
 ls -1 "$DEST"
+echo
+echo "REMINDER: the app's tailwind.config content[] MUST include"
+echo "  \"./src/shared-quiz/**/*.{js,ts,jsx,tsx}\""
+echo "or the engine's Tailwind utilities won't be generated (unstyled qualifier)."
