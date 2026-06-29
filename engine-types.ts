@@ -12,7 +12,7 @@ import type { ReactNode } from "react";
 
 export type Answers = Record<string, string | string[]>;
 
-export type FieldKind = "text" | "tel" | "email" | "number" | "money" | "select";
+export type FieldKind = "text" | "tel" | "email" | "number" | "money" | "select" | "date";
 
 export interface QField {
   key: string;

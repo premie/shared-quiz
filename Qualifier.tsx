@@ -173,8 +173,9 @@ export function Qualifier({ config, theme }: QualifierProps) {
       );
     }
     const inputMode = f.kind === "number" ? "numeric" : f.kind === "tel" ? "tel" : f.kind === "email" ? "email" : undefined;
+    const type = f.kind === "date" ? "date" : undefined;
     return (
-      <input value={str(f.key)} onChange={(e) => set(f.key, e.target.value)} placeholder={f.placeholder} inputMode={inputMode} className={inputCls} style={inputStyle} />
+      <input value={str(f.key)} onChange={(e) => set(f.key, e.target.value)} placeholder={f.placeholder} inputMode={inputMode} type={type} className={inputCls} style={inputStyle} />
     );
   }
 
