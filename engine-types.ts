@@ -72,10 +72,12 @@ export interface QualifierIntro {
 }
 
 export interface QualifierBrand {
-  name: ReactNode; // header lockup (string or JSX)
+  /** Header text lockup. Omit when `crown` carries the full logo image. */
+  name?: ReactNode;
   homeHref?: string; // default "/"
   exitLabel?: string; // default "Exit"
-  crown?: ReactNode; // optional brand mark shown before the name
+  /** Brand mark / logo (e.g. a next/image crest) shown in the header. */
+  crown?: ReactNode;
 }
 
 export interface QualifierConfig {

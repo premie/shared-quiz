@@ -190,7 +190,7 @@ export function Qualifier({ config, theme }: QualifierProps) {
       <header className="flex items-center justify-between w-full max-w-[760px] mx-auto px-6 py-[18px]">
         <a href={brand.homeHref ?? "/"} className="flex items-center gap-2.5 no-underline text-white">
           {brand.crown}
-          <span className="font-display text-[1.05rem] tracking-[0.06em]">{brand.name}</span>
+          {brand.name && <span className="font-display text-[1.05rem] tracking-[0.06em]">{brand.name}</span>}
         </a>
         <a href={brand.homeHref ?? "/"} className="no-underline text-[0.9rem] font-medium transition-colors hover:text-white" style={{ color: mutedText }}>
           {brand.exitLabel ?? "Exit"}
