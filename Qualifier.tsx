@@ -269,6 +269,9 @@ export function Qualifier({ config, theme }: QualifierProps) {
                 <div className="grid gap-3.5 mt-6" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))" }}>
                   {(q.fields ?? []).map((f) => (
                     <div key={f.key} style={{ gridColumn: f.half ? "auto" : "1 / -1" }}>
+                      {f.label && (
+                        <span className="block text-[0.9rem] font-semibold mb-2" style={{ color: bodyText }}>{f.label}</span>
+                      )}
                       <FieldInput f={f} />
                     </div>
                   ))}
