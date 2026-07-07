@@ -23,6 +23,26 @@ export function Qualifier({ config, theme }: QualifierProps) {
   const [submitFailed, setSubmitFailed] = useState(false);
   const started = useRef(false);
 
+  // Prefill from URL query params so leads arriving from another form (contact
+  // form, calculator) don't re-type what they already gave. Seeds any param
+  // whose key matches a question id, a field key, or name/phone/email. Skips
+  // multi-select questions (their answers are arrays, not strings).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const sp = new URLSearchParams(window.location.search);
+    const valid = new Set<string>(["name", "phone", "email"]);
+    for (const qq of questions) {
+      if (qq.type !== "multi") valid.add(qq.id);
+      for (const f of qq.fields ?? []) valid.add(f.key);
+    }
+    const seed: Answers = {};
+    sp.forEach((v, k) => {
+      if (valid.has(k) && v.trim()) seed[k] = v;
+    });
+    if (Object.keys(seed).length) setA((prev) => ({ ...seed, ...prev }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Questions that apply given the answers so far (supports skip()).
   const active = questions.filter((q) => !q.skip?.(a));
   const total = active.length;
