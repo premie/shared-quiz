@@ -92,4 +92,10 @@ export interface CaseCalculatorProps {
   subhead?: string;
   consentText?: string;
   legalFooter?: string;
+  /** Copy for the mandatory acknowledgement checkbox shown before the estimate. */
+  acknowledgementText?: string;
+  /** Persistent one-line disclosure shown on every screen. */
+  perScreenDisclaimer?: string;
+  /** Where "talk to an attorney" links (per brand). */
+  consultHref?: string;
 }

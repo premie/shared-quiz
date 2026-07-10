@@ -26,6 +26,13 @@ const DEFAULT_CONSENT =
   "I authorize the firm to share my case information with a qualified mold assessment expert. Without an expert evaluation, we are unable to properly assess your case for potential settlement value.";
 const DEFAULT_LEGAL =
   "By submitting, you agree to be contacted by Conduit Law, LLC. Estimated ranges are illustrative and not a guarantee. Actual settlement value depends on specifics only an attorney can evaluate.";
+// Mandatory acknowledgement the user must accept before any estimate is shown.
+// Keep in sync with the QuizShell gate copy on conduit.law.
+const DEFAULT_ACK =
+  "I understand this is an informational estimate only. It is not legal advice, not a case valuation, and not a promise of any settlement or recovery. Real claim values depend on facts, evidence, and insurance that only an attorney can evaluate. The only way to learn what my claim may actually be worth is to speak with a lawyer.";
+// Persistent strip shown on every screen of the tool.
+const DEFAULT_PER_SCREEN =
+  "Informational estimate only — not legal advice, a valuation, or a promise of recovery.";
 
 type RadioQuestion = {
   kind: "radio";
@@ -290,6 +297,9 @@ export function CaseCalculator({
   subhead = DEFAULT_SUBHEAD,
   consentText = DEFAULT_CONSENT,
   legalFooter = DEFAULT_LEGAL,
+  acknowledgementText = DEFAULT_ACK,
+  perScreenDisclaimer = DEFAULT_PER_SCREEN,
+  consultHref = "/free-consultation",
 }: CaseCalculatorProps) {
   const t = { ...DEFAULT_THEME, ...theme };
 
@@ -298,7 +308,8 @@ export function CaseCalculator({
     lost_wages_usd: 0,
     property_damage_usd: 0,
   });
-  const [phase, setPhase] = useState<"form" | "contact" | "done">("form");
+  const [phase, setPhase] = useState<"form" | "acknowledge" | "contact" | "done">("form");
+  const [acknowledged, setAcknowledged] = useState(false);
   const [visibleSteps, setVisibleSteps] = useState(1);
   const [result, setResult] = useState<CalculatorResult | null>(null);
   const [contact, setContact] = useState({
@@ -368,7 +379,8 @@ export function CaseCalculator({
     if (!allStepsComplete) return;
     const r = computeResult(inputs as CalculatorInputs);
     setResult(r);
-    setPhase("contact");
+    // Gate the reveal: user must accept the acknowledgement before the estimate shows.
+    setPhase("acknowledge");
   };
 
   const handleSubmit = async () => {
@@ -606,6 +618,15 @@ export function CaseCalculator({
           </div>
 
           <div className="bg-white border border-t-0 border-gray-200 rounded-b-2xl shadow-lg">
+            {phase !== "done" && (
+              <div className="border-b border-amber-200 bg-amber-50 px-8 py-2.5 text-center text-xs leading-5 text-amber-900">
+                {perScreenDisclaimer}{" "}
+                <a href={consultHref} className="font-semibold underline">
+                  Talk to an attorney
+                </a>{" "}
+                for a real case value.
+              </div>
+            )}
             {phase === "form" && (
               <>
                 {STEPS.slice(0, visibleSteps).map((def, idx) =>
@@ -623,6 +644,53 @@ export function CaseCalculator({
                   </div>
                 )}
               </>
+            )}
+
+            {phase === "acknowledge" && (
+              <div className="p-8">
+                <p
+                  className="text-xs font-bold uppercase tracking-wider mb-2"
+                  style={accentStyle}
+                >
+                  Before your estimate
+                </p>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  One quick thing first
+                </h3>
+                <p className="text-sm text-gray-600 mb-5">
+                  This tool produces a rough, automated range for education only.
+                  Please confirm you understand what it is — and what it is not —
+                  before we show a number.
+                </p>
+                <label className="flex items-start gap-3 rounded-lg border-2 border-amber-200 bg-amber-50 p-4 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={acknowledged}
+                    onChange={(e) => setAcknowledged(e.target.checked)}
+                    className="mt-0.5 w-5 h-5 rounded border-gray-300 cursor-pointer flex-shrink-0"
+                    style={{ accentColor: t.accentBg }}
+                  />
+                  <span className="text-sm text-amber-900">{acknowledgementText}</span>
+                </label>
+                <div className="mt-6 flex items-center justify-between gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPhase("form")}
+                    className="rounded-lg border border-gray-300 bg-white px-5 py-3 text-sm font-semibold text-gray-700 transition-all hover:bg-gray-50"
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => acknowledged && setPhase("contact")}
+                    disabled={!acknowledged}
+                    className="font-bold py-3 px-6 rounded-lg transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={primaryBtnStyle}
+                  >
+                    Show my estimate →
+                  </button>
+                </div>
+              </div>
             )}
 
             {phase === "contact" && (
