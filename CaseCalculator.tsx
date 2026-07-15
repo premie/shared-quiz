@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
+import { useRef, useState, type CSSProperties } from "react";
 import type { CaseQualifierTheme } from "./types";
 import type {
   CalculatorInputs,
@@ -290,6 +290,16 @@ function fmtMoney(n: number): string {
   return `$${n.toLocaleString()}`;
 }
 
+// Self-contained GA4 funnel tracking. The calculator lives in a shared lib
+// consumed by different hosts, so it calls window.gtag directly (guarded)
+// rather than importing any host app's analytics helper. Measures the funnel:
+// calculator_start -> calculator_estimate_view -> calculator_lead.
+function trackCalc(event: string, params: Record<string, unknown>): void {
+  if (typeof window === "undefined") return;
+  const w = window as unknown as { gtag?: (...args: unknown[]) => void };
+  w.gtag?.("event", event, params);
+}
+
 export function CaseCalculator({
   config,
   theme,
@@ -324,6 +334,16 @@ export function CaseCalculator({
   const [submitting, setSubmitting] = useState(false);
   const [submitFailed, setSubmitFailed] = useState(false);
 
+  // Funnel guards — each event fires at most once per mount.
+  const startedRef = useRef(false);
+  const estimateViewedRef = useRef(false);
+  const calcId = config.source || "case_calculator";
+  const markStarted = () => {
+    if (startedRef.current) return;
+    startedRef.current = true;
+    trackCalc("calculator_start", { calculator: calcId });
+  };
+
   const allStepsComplete = STEPS.every((_, i) => stepComplete(i, inputs));
 
   const headerStyle: CSSProperties = {
@@ -345,6 +365,7 @@ export function CaseCalculator({
   };
 
   const setRadio = (id: keyof CalculatorInputs, value: string) => {
+    markStarted();
     setInputs((prev) => {
       const next = { ...prev, [id]: value };
       // reveal next step if current one becomes complete
@@ -359,6 +380,7 @@ export function CaseCalculator({
   };
 
   const setNumber = (id: keyof CalculatorInputs, value: string) => {
+    markStarted();
     const n = value === "" ? 0 : Math.max(0, parseInt(value, 10) || 0);
     setInputs((prev) => ({ ...prev, [id]: n }));
   };
@@ -404,6 +426,7 @@ export function CaseCalculator({
         contact,
         consentShare,
       });
+      trackCalc("calculator_lead", { calculator: calcId, value: 1 });
       setPhase("done");
     } catch (err) {
       // Delivery failed after retries — never show a false confirmation.
@@ -682,7 +705,14 @@ export function CaseCalculator({
                   </button>
                   <button
                     type="button"
-                    onClick={() => acknowledged && setPhase("contact")}
+                    onClick={() => {
+                      if (!acknowledged) return;
+                      if (!estimateViewedRef.current) {
+                        estimateViewedRef.current = true;
+                        trackCalc("calculator_estimate_view", { calculator: calcId });
+                      }
+                      setPhase("contact");
+                    }}
                     disabled={!acknowledged}
                     className="font-bold py-3 px-6 rounded-lg transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     style={primaryBtnStyle}
