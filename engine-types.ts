@@ -25,7 +25,7 @@ export interface QField {
   half?: boolean;
 }
 
-export type QType = "single" | "multi" | "fields" | "contact";
+export type QType = "single" | "multi" | "select" | "fields" | "contact";
 
 export interface QQuestion {
   id: string;

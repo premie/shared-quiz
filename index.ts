@@ -48,3 +48,13 @@ export type {
   StateMoldLaw,
   CaseCalculatorProps,
 } from "./calculator-types";
+
+// Canonical U.S. state list + coverage helpers (shared by qualifier + calculator).
+export {
+  US_STATES,
+  US_STATE_NAMES,
+  STATE_ABBREV,
+  COVERED_STATES,
+  isCoveredState,
+} from "./us-states";
+export type { UsState } from "./us-states";

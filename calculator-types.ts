@@ -18,7 +18,9 @@ export interface CalculatorInputs {
     | "hoa"
     | "hotel-str"
     | "other";
-  state: "Arizona" | "California" | "Colorado" | "Kansas" | "Other";
+  // Full state name from the state dropdown. We list all 50 + DC now, so this
+  // is a plain string rather than the old covered-states-only union.
+  state: string;
   unit_access: "living-there" | "moved-but-access" | "report-only" | "no-access";
   notice: "written" | "verbal" | "none";
   severity: SeverityTier;
@@ -55,7 +57,7 @@ export interface AppliedMultiplier {
 }
 
 export interface StateMoldLaw {
-  abbrev: "AZ" | "CA" | "CO" | "KS";
+  abbrev: string;
   statuteOfLimitations: string;
   habitabilityCitation: string;
   retaliationCitation: string;
@@ -70,6 +72,9 @@ export type CalculatorResult =
       breakdown: LineItem[];
       multipliers: AppliedMultiplier[];
       stateInfo: StateMoldLaw | null;
+      /** Property is outside AZ/CA/CO/KS — show the honest coverage note and
+       *  submit as a referral lead, but still give them the estimate. */
+      outOfCoverage: boolean;
       summary: string;
     }
   | {

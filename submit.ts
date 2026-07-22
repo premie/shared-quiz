@@ -1,5 +1,6 @@
 import type { Answers, CaseQualifierConfig, Tier } from "./types";
 import { STATE_CODES } from "./questions";
+import { isCoveredState } from "./us-states";
 import { captureAttribution } from "./attribution";
 import { deliverLead } from "./deliver";
 
@@ -102,6 +103,9 @@ export async function submitLead({
     state: stateCode,
     practice_area: "mold",
     injury_type: "mold_exposure",
+    // True when the property is outside AZ/CA/CO/KS — a captured referral lead,
+    // not a lost one. Staff route these to local counsel (or associate in).
+    out_of_coverage: !isCoveredState(answers.state as string),
     description: descLines,
     unit_access: answers.unit_access || null,
     unit_access_loss_date: answers.unit_access_loss_date || null,

@@ -6,6 +6,7 @@ import type {
   SeverityTier,
   StateMoldLaw,
 } from "./calculator-types";
+import { isCoveredState } from "./us-states";
 
 const TIER_RANGES: Record<SeverityTier, { low: number; high: number }> = {
   mild: { low: 10_000, high: 50_000 },
@@ -179,15 +180,9 @@ export function computeResult(i: CalculatorInputs): CalculatorResult {
         "Short-term rentals (hotels, Airbnb, vacation rentals) rarely produce viable mold cases because you've checked out by the time symptoms connect to the exposure — and you can't get environmental samples after you leave. We may still be able to help; a brief consultation will tell us.",
     };
   }
-  if (i.state === "Other") {
-    return {
-      type: "unlikely-case",
-      reason: "out-of-state",
-      title: "Outside Our Coverage Area",
-      message:
-        "We currently handle mold cases in Arizona, California, Colorado, and Kansas. For other states we can help connect you to a local firm that specializes in mold litigation.",
-    };
-  }
+  // Out-of-coverage states no longer dead-end here. We still compute the
+  // estimate and capture the lead (flagged out_of_coverage) so it can be
+  // referred out — the coverage caveat is surfaced on the result screen.
   if (i.unit_access === "no-access") {
     return {
       type: "unlikely-case",
@@ -280,6 +275,7 @@ export function computeResult(i: CalculatorInputs): CalculatorResult {
     breakdown,
     multipliers,
     stateInfo: STATE_LAW[i.state] || null,
+    outOfCoverage: !isCoveredState(i.state),
     summary,
   };
 }

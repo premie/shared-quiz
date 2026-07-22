@@ -9,6 +9,7 @@ import type {
 } from "./calculator-types";
 import { computeResult } from "./calculator-logic";
 import { submitCalculatorLead } from "./calculator-submit";
+import { US_STATES } from "./us-states";
 
 const DEFAULT_THEME: Required<CaseQualifierTheme> = {
   headerGradientFrom: "#4A1C6F",
@@ -50,9 +51,18 @@ type NumberQuestion = {
   placeholder?: string;
 };
 
+type SelectQuestion = {
+  kind: "select";
+  id: keyof CalculatorInputs;
+  text: string;
+  sub?: string;
+  placeholder?: string;
+  options: { value: string; label: string }[];
+};
+
 type StepDef = {
   title: string;
-  questions: (RadioQuestion | NumberQuestion)[];
+  questions: (RadioQuestion | NumberQuestion | SelectQuestion)[];
 };
 
 const STEPS: StepDef[] = [
@@ -73,16 +83,12 @@ const STEPS: StepDef[] = [
         ],
       },
       {
-        kind: "radio",
+        kind: "select",
         id: "state",
         text: "Which state was the property in?",
-        options: [
-          { value: "Arizona", label: "Arizona" },
-          { value: "California", label: "California" },
-          { value: "Colorado", label: "Colorado" },
-          { value: "Kansas", label: "Kansas" },
-          { value: "Other", label: "Other state" },
-        ],
+        sub: "We take cases directly in AZ, CA, CO, and KS. For other states we'll review it and can refer you to local counsel.",
+        placeholder: "Select a state…",
+        options: US_STATES.map((s) => ({ value: s.name, label: s.name })),
       },
       {
         kind: "radio",
@@ -264,7 +270,8 @@ function stepComplete(step: number, inputs: Partial<CalculatorInputs>): boolean 
   const def = STEPS[step];
   return def.questions.every((q) => {
     const v = inputs[q.id];
-    if (q.kind === "radio") return typeof v === "string" && v.length > 0;
+    if (q.kind === "radio" || q.kind === "select")
+      return typeof v === "string" && v.length > 0;
     // number inputs can be 0 — treat explicit entry as complete once set
     return typeof v === "number" && !Number.isNaN(v);
   });
@@ -454,7 +461,22 @@ export function CaseCalculator({
             {q.sub && (
               <p className="text-sm text-gray-500 mb-3">{q.sub}</p>
             )}
-            {q.kind === "radio" ? (
+            {q.kind === "select" ? (
+              <select
+                value={(inputs[q.id] as string) || ""}
+                onChange={(e) => setRadio(q.id, e.target.value)}
+                className="w-full max-w-xs px-4 py-3 rounded-lg border-2 border-gray-200 bg-white text-gray-900 text-sm font-medium transition-all outline-none focus:border-gray-400 appearance-none cursor-pointer"
+              >
+                <option value="" disabled>
+                  {q.placeholder || "Select…"}
+                </option>
+                {q.options.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            ) : q.kind === "radio" ? (
               <div className="flex flex-col gap-2">
                 {q.options.map((opt) => {
                   const selected = inputs[q.id] === opt.value;
@@ -536,6 +558,21 @@ export function CaseCalculator({
     };
     return (
       <div className="p-8">
+        {result.outOfCoverage && (
+          <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 mb-6 text-sm text-amber-900">
+            <p className="font-semibold mb-1">
+              🧭 Outside our states &mdash; here&apos;s an estimate anyway
+            </p>
+            <p>
+              We take mold cases directly in Arizona, California, Colorado, and
+              Kansas, so we can&apos;t promise to represent you here. This
+              estimate is for your information. Share your details and we&apos;ll
+              review it. If it&apos;s strong we may bring in local counsel, and
+              if we can&apos;t help directly we&apos;ll point you to a qualified
+              mold attorney in your state.
+            </p>
+          </div>
+        )}
         <div
           className="rounded-xl p-6 mb-6 text-white"
           style={{

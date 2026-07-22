@@ -76,6 +76,8 @@ export function Qualifier({ config, theme }: QualifierProps) {
     ? contactReady
     : q.type === "fields"
     ? fieldsReady(q.fields)
+    : q.type === "select"
+    ? str(q.id) !== ""
     : true;
 
   function buildDescription(): string {
@@ -267,6 +269,26 @@ export function Qualifier({ config, theme }: QualifierProps) {
                       {opt}
                     </button>
                   ))}
+                </div>
+              )}
+
+              {q.type === "select" && (
+                <div className="mt-6">
+                  <select
+                    value={str(q.id)}
+                    onChange={(e) => set(q.id, e.target.value)}
+                    className="w-full font-sans text-[1.02rem] font-semibold text-white px-5 py-[18px] rounded-xl transition-all appearance-none cursor-pointer"
+                    style={optionStyle(str(q.id) !== "")}
+                  >
+                    <option value="" disabled className="text-navy-900">
+                      Select a state…
+                    </option>
+                    {(q.options ?? []).map((opt) => (
+                      <option key={opt} value={opt} className="text-navy-900">
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               )}
 
