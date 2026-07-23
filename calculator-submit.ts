@@ -1,8 +1,8 @@
 import type { CaseQualifierConfig } from "./types";
 import type { CalculatorInputs, CalculatorResult } from "./calculator-types";
-import { STATE_LAW } from "./calculator-logic";
 import { captureAttribution } from "./attribution";
 import { deliverLead } from "./deliver";
+import { STATE_ABBREV, isCoveredState } from "./us-states";
 
 export interface CalculatorContact {
   firstName: string;
@@ -28,7 +28,7 @@ export async function submitCalculatorLead({
   contact,
   consentShare,
 }: CalculatorSubmitArgs): Promise<void> {
-  const stateCode = STATE_LAW[inputs.state]?.abbrev || null;
+  const stateCode = STATE_ABBREV[inputs.state] || null;
 
   const fullName = `${contact.firstName.trim()} ${contact.lastName.trim()}`
     .replace(/\s+/g, " ")
@@ -106,6 +106,8 @@ export async function submitCalculatorLead({
     state: stateCode,
     practice_area: "mold",
     injury_type: "mold_exposure",
+    // Outside AZ/CA/CO/KS — captured as a referral lead, not lost.
+    out_of_coverage: !isCoveredState(inputs.state),
     description: descLines,
     campaign: config.campaign,
     ...sharedMeta,

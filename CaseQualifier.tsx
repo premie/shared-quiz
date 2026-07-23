@@ -4,6 +4,7 @@ import { useState, useCallback, type CSSProperties } from "react";
 import {
   QUESTIONS,
   TIER_CONFIG,
+  OUT_OF_COVERAGE_RESULT,
   computeFlags,
   computeScore,
   getTier,
@@ -207,7 +208,11 @@ export function CaseQualifier({
   const flags = computeFlags(answers);
   const score = computeScore(flags);
   const tier = getTier(flags, score);
-  const tierConfig = TIER_CONFIG[tier];
+  // Out-of-coverage overrides the result copy with an honest expectation-setting
+  // message on every tier, while the lead still submits (with its real state).
+  const tierConfig = flags.includes("OUT_OF_COVERAGE")
+    ? OUT_OF_COVERAGE_RESULT
+    : TIER_CONFIG[tier];
 
   const letters = "ABCDEFGHIJ";
 
@@ -282,6 +287,26 @@ export function CaseQualifier({
                     }
                     className="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 bg-white text-gray-900 text-sm font-medium transition-all outline-none focus:border-gray-400"
                   />
+                ) : currentQ.type === "select" ? (
+                  <select
+                    value={(currentAnswer as string) || ""}
+                    onChange={(e) =>
+                      setAnswers((prev) => ({
+                        ...prev,
+                        [currentQ.id]: e.target.value,
+                      }))
+                    }
+                    className="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 bg-white text-gray-900 text-sm font-medium transition-all outline-none focus:border-gray-400 appearance-none cursor-pointer"
+                  >
+                    <option value="" disabled>
+                      Select a state…
+                    </option>
+                    {(currentQ.options || []).map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
                 ) : (
                   <div className="flex flex-col gap-3">
                     {(currentQ.options || []).map((opt, i) => {
@@ -327,7 +352,9 @@ export function CaseQualifier({
                   ) : (
                     <div />
                   )}
-                  {(currentQ.type === "multi" || currentQ.type === "date") && (
+                  {(currentQ.type === "multi" ||
+                    currentQ.type === "date" ||
+                    currentQ.type === "select") && (
                     <button
                       onClick={goNext}
                       disabled={!canAdvance}

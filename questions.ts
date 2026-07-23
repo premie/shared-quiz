@@ -1,4 +1,5 @@
 import type { Answers, Question, Tier } from "./types";
+import { US_STATE_NAMES, STATE_ABBREV, isCoveredState } from "./us-states";
 
 export const QUESTIONS: Question[] = [
   {
@@ -23,11 +24,13 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: "state",
-    type: "single",
+    type: "select",
     text: "Which state is the property located in?",
-    sub: "We handle mold cases in Arizona, California, Colorado, and Kansas.",
-    options: ["Arizona", "California", "Colorado", "Kansas", "Other state"],
-    flag: (v) => (v === "Other state" ? "OUT_OF_STATE" : null),
+    sub: "We take mold cases directly in Arizona, California, Colorado, and Kansas. Elsewhere we can review it and help you find local counsel.",
+    options: US_STATE_NAMES,
+    // Not a case-quality signal — just a routing tag. Weighted 0 so it never
+    // penalizes the score; a strong out-of-coverage case still reads as strong.
+    flag: (v) => (isCoveredState(v as string) ? null : "OUT_OF_COVERAGE"),
   },
   {
     id: "noticed_when",
@@ -169,7 +172,10 @@ export const QUESTIONS: Question[] = [
 
 const FLAG_WEIGHTS: Record<string, number> = {
   HOMEOWNER_NO_LANDLORD: 10,
-  OUT_OF_STATE: 5,
+  // Out-of-coverage is a routing tag, not a merit signal — don't dock the
+  // score. A strong case elsewhere should still surface as strong so we can
+  // decide whether to associate local counsel.
+  OUT_OF_COVERAGE: 0,
   HOA_DISPUTE: 5,
   SOL_LIKELY_EXPIRED: 4,
   NO_PERSONAL_INJURY: 3,
@@ -205,9 +211,12 @@ export function computeScore(flags: string[]): number {
 }
 
 export function getTier(flags: string[], score: number): Tier {
+  // Note: OUT_OF_COVERAGE is intentionally NOT a hard-unlikely trigger. The
+  // result screen shows an honest out-of-coverage message regardless of tier
+  // (see OUT_OF_COVERAGE_RESULT), but the underlying tier keeps reflecting real
+  // case strength so staff can spot a referral worth associating counsel on.
   if (
     flags.includes("HOMEOWNER_NO_LANDLORD") ||
-    flags.includes("OUT_OF_STATE") ||
     flags.includes("HOA_DISPUTE")
   )
     return "unlikely";
@@ -237,9 +246,15 @@ export const TIER_CONFIG: Record<
   },
 };
 
-export const STATE_CODES: Record<string, string> = {
-  Arizona: "AZ",
-  California: "CA",
-  Colorado: "CO",
-  Kansas: "KS",
-};
+// Full state name -> USPS code for every state we list, so the submitted lead
+// always carries a real, structured state (never null for out-of-area leads).
+export const STATE_CODES: Record<string, string> = STATE_ABBREV;
+
+/** Honest out-of-coverage message shown on the result screen (any tier) when
+ *  the property is outside AZ/CA/CO/KS. Sets expectations up front: we may not
+ *  be able to take it, but we'll still review and help point them somewhere. */
+export const OUT_OF_COVERAGE_RESULT = {
+  icon: "🧭",
+  title: "We May Not Be Able to Take This One",
+  body: "Your property is outside the states where we're licensed (Arizona, California, Colorado, and Kansas), so we can't promise to represent you. Share your details and we'll review your case. If it's strong we may be able to bring in local counsel, and if we can't help directly we'll point you toward a qualified mold attorney in your state.",
+} as const;
