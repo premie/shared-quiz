@@ -932,19 +932,22 @@ export function CaseCalculator({
 
             {phase === "done" && (
               <div className="p-12 text-center">
-                <div className="text-5xl mb-4">🎉</div>
+                <div className="text-5xl mb-4">📩</div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">
                   We&apos;ve Got Your Info
                 </h3>
                 <p className="text-gray-600 mb-6">
-                  Thank you, {contact.firstName}. A member of our team
-                  will review your answers and reach out within{" "}
-                  <strong>1 business day</strong>.
+                  Thank you, {contact.firstName}. Here&apos;s what happens next:{" "}
+                  <strong>we&apos;ll reach out by email, not by phone.</strong>{" "}
+                  Mold claims are built on evidence, so we work over email to
+                  collect the records, photos, and documentation needed to
+                  validate your claim.
                 </p>
                 <p className="text-sm text-gray-400">
-                  In the meantime, start gathering any photos, medical records,
-                  or written communications you have — they&apos;ll help us
-                  build your case faster.
+                  Watch your inbox over the next business day (check your spam
+                  folder too), and start gathering any photos, medical records,
+                  or written communications you have — it&apos;ll help us move
+                  faster.
                 </p>
               </div>
             )}

@@ -93,6 +93,9 @@ export interface QualifierConfig {
   brand: QualifierBrand;
   consentText?: string;
   legalFooter?: string;
+  /** Optional note shown on the post-submit confirmation (e.g. mold: expect an
+   *  email, not a call, so we can collect the evidence to validate the claim). */
+  confirmationNote?: string;
   /** App-supplied attribution payload (UTM/click-ids/GA) merged into the lead. */
   getAttribution?: () => Record<string, unknown>;
   /** App-supplied analytics hook (GA events). */

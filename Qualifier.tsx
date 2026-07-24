@@ -12,7 +12,7 @@ function money(n: number): string {
 }
 
 export function Qualifier({ config, theme }: QualifierProps) {
-  const { questions, classify, intro, brand, fallbackPhone, consentText, legalFooter } = config;
+  const { questions, classify, intro, brand, fallbackPhone, consentText, legalFooter, confirmationNote } = config;
   const bodyText = theme.bodyText ?? "#C2CCDA";
   const mutedText = theme.mutedText ?? "#9FB0C9";
 
@@ -359,6 +359,11 @@ export function Qualifier({ config, theme }: QualifierProps) {
                 <a href={fallbackPhone.href} className="inline-block mt-4 font-bold rounded-lg px-6 py-3 no-underline transition-opacity hover:opacity-90" style={accentBtn}>
                   Call {fallbackPhone.display}
                 </a>
+              )}
+              {!submitFailed && confirmationNote && (
+                <p className="text-[1.02rem] leading-[1.6] mt-4 mx-auto max-w-[46ch]" style={{ color: mutedText }}>
+                  {confirmationNote}
+                </p>
               )}
 
               <div className="rounded-2xl p-[26px] mt-7 text-left" style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${theme.accent}4D` }}>
