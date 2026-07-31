@@ -17,6 +17,7 @@ export const QUESTIONS: Question[] = [
     ],
     flag: (v) => {
       if (v === "Home I own") return "HOMEOWNER_NO_LANDLORD";
+      if (v === "Workplace or office") return "WORKPLACE_EXPOSURE";
       if (v === "HOA-managed property") return "HOA_DISPUTE";
       if (v === "Other") return "UNUSUAL_PROPERTY_TYPE";
       return null;
@@ -85,17 +86,57 @@ export const QUESTIONS: Question[] = [
     text: "Did you notify the responsible party about the mold?",
     sub: "Written notice (text, email, letter) is much stronger than a verbal complaint.",
     options: [
-      "Yes — in writing (text, email, or letter)",
-      "Yes — verbally only",
+      "Yes — in writing (I can show the email, text, or letter)",
+      "Yes — but only verbally or in person (no written record)",
       "No — not yet",
       "No — I moved out before notifying them",
     ],
     flag: (v) => {
       if (v === "No — not yet" || v === "No — I moved out before notifying them")
         return "NO_NOTICE";
-      if (v === "Yes — verbally only") return "VERBAL_NOTICE_ONLY";
+      if (v === "Yes — but only verbally or in person (no written record)")
+        return "VERBAL_NOTICE_ONLY";
       return null;
     },
+  },
+  // Written-notice follow-ups — only shown when the visitor claims written
+  // notice. A bare click on "in writing" proved unreliable (clients read a
+  // casual text as "in writing" even when nothing exists), so we pin the claim
+  // to a method + approximate date and invite them to paste the actual message.
+  {
+    id: "notice_method",
+    type: "single",
+    text: "How was that written notice sent?",
+    sub: "We'll ask you to share a copy during review — pick the one you can still find.",
+    options: [
+      "Email",
+      "Text message",
+      "Letter or certified mail",
+      "Maintenance portal or repair ticket",
+      "I'm not sure I can still find it",
+    ],
+    flag: (v) =>
+      v === "I'm not sure I can still find it" ? "NOTICE_UNVERIFIABLE" : null,
+    skip: (a) =>
+      a.notified !== "Yes — in writing (I can show the email, text, or letter)",
+  },
+  {
+    id: "notice_date",
+    type: "date",
+    text: "About when did you send it?",
+    sub: "An approximate date is fine — pick the closest day you remember.",
+    skip: (a) =>
+      a.notified !== "Yes — in writing (I can show the email, text, or letter)",
+  },
+  {
+    id: "notice_excerpt",
+    type: "text",
+    optional: true,
+    text: "Paste the message you sent (optional)",
+    sub: "Copy and paste the email or text you sent about the mold. If it's a letter or you can't find it right now, skip this — we'll ask for a copy later.",
+    skip: (a) =>
+      a.notified !== "Yes — in writing (I can show the email, text, or letter)" ||
+      a.notice_method === "I'm not sure I can still find it",
   },
   {
     id: "response",
@@ -124,7 +165,8 @@ export const QUESTIONS: Question[] = [
     text: "Do you still have access to the property where the mold is?",
     sub: "Our mold expert may need to inspect the property to evaluate your case and document conditions.",
     options: [
-      "Yes — I still live or work there",
+      "Yes — I still live there",
+      "Yes — I work there (it's not my home)",
       "Yes — but I expect to lose access soon",
       "Yes — I moved out but can still access it",
       "No — but I have a mold inspection report",
@@ -132,6 +174,10 @@ export const QUESTIONS: Question[] = [
       "Not sure",
     ],
     flag: (v) => {
+      // "I work there" means the mold site is a workplace, not the visitor's
+      // rental — an employer claim (comp exclusivity), not a landlord claim.
+      // Gated the same as the workplace property type.
+      if (v === "Yes — I work there (it's not my home)") return "WORKPLACE_EXPOSURE";
       if (v === "Yes — but I expect to lose access soon") return "UNIT_ACCESS_AT_RISK";
       if (v === "Yes — I moved out but can still access it") return "UNIT_ACCESS_LIMITED";
       if (v === "No — but I have a mold inspection report" || v === "No — I no longer have access") {
@@ -147,7 +193,8 @@ export const QUESTIONS: Question[] = [
     sub: "If you still have access, enter the date you expect access to end. If you no longer have access, enter the date access ended.",
     skip: (a) =>
       !a.unit_access ||
-      a.unit_access === "Yes — I still live or work there" ||
+      a.unit_access === "Yes — I still live there" ||
+      a.unit_access === "Yes — I work there (it's not my home)" ||
       a.unit_access === "Not sure",
   },
   {
@@ -172,6 +219,8 @@ export const QUESTIONS: Question[] = [
 
 const FLAG_WEIGHTS: Record<string, number> = {
   HOMEOWNER_NO_LANDLORD: 10,
+  WORKPLACE_EXPOSURE: 10,
+  NOTICE_UNVERIFIABLE: 1,
   // Out-of-coverage is a routing tag, not a merit signal — don't dock the
   // score. A strong case elsewhere should still surface as strong so we can
   // decide whether to associate local counsel.
@@ -217,6 +266,7 @@ export function getTier(flags: string[], score: number): Tier {
   // case strength so staff can spot a referral worth associating counsel on.
   if (
     flags.includes("HOMEOWNER_NO_LANDLORD") ||
+    flags.includes("WORKPLACE_EXPOSURE") ||
     flags.includes("HOA_DISPUTE")
   )
     return "unlikely";

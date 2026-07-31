@@ -1,4 +1,4 @@
-export type QuestionType = "single" | "multi" | "date" | "select";
+export type QuestionType = "single" | "multi" | "date" | "select" | "text";
 
 export interface Question {
   id: string;
@@ -6,6 +6,8 @@ export interface Question {
   text: string;
   sub?: string;
   options?: string[];
+  /** Optional questions can be advanced past without an answer. */
+  optional?: boolean;
   flag?: (value: string | string[]) => string | null;
   skip?: (answers: Answers) => boolean;
 }

@@ -95,6 +95,22 @@ export function CaseQualifier({
         ? "Last step!"
         : "Complete";
 
+  // Changing an answer invalidates its dependent follow-up answers — clear
+  // them so a Back-and-change can't submit a stale conditional answer.
+  const clearDependents = (bag: Answers, questionId: string) => {
+    if (questionId === "unit_access") {
+      delete bag.unit_access_loss_date;
+    }
+    if (questionId === "notified") {
+      delete bag.notice_method;
+      delete bag.notice_date;
+      delete bag.notice_excerpt;
+    }
+    if (questionId === "notice_method") {
+      delete bag.notice_excerpt;
+    }
+  };
+
   const selectOption = useCallback(
     (questionId: string, type: QuestionType, option: string) => {
       setAnswers((prev) => {
@@ -109,9 +125,7 @@ export function CaseQualifier({
         }
 
         next[questionId] = option;
-        if (questionId === "unit_access") {
-          delete next.unit_access_loss_date;
-        }
+        clearDependents(next, questionId);
         return next;
       });
 
@@ -119,9 +133,7 @@ export function CaseQualifier({
         setTimeout(() => {
           setStep((prev) => {
             const nextAnswers = { ...answers, [questionId]: option };
-            if (questionId === "unit_access") {
-              delete nextAnswers.unit_access_loss_date;
-            }
+            clearDependents(nextAnswers, questionId);
             const qs = QUESTIONS.filter(
               (q) => !q.skip || !q.skip(nextAnswers),
             );
@@ -145,8 +157,9 @@ export function CaseQualifier({
     return currentAnswer === option;
   };
 
-  const canAdvance =
-    currentQ?.type === "multi"
+  const canAdvance = currentQ?.optional
+    ? true
+    : currentQ?.type === "multi"
       ? ((currentAnswer as string[]) || []).length > 0
       : !!currentAnswer;
 
@@ -307,6 +320,19 @@ export function CaseQualifier({
                       </option>
                     ))}
                   </select>
+                ) : currentQ.type === "text" ? (
+                  <textarea
+                    rows={5}
+                    value={(currentAnswer as string) || ""}
+                    onChange={(e) =>
+                      setAnswers((prev) => ({
+                        ...prev,
+                        [currentQ.id]: e.target.value,
+                      }))
+                    }
+                    placeholder="Paste here…"
+                    className="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 bg-white text-gray-900 text-sm font-medium transition-all outline-none focus:border-gray-400 resize-none"
+                  />
                 ) : (
                   <div className="flex flex-col gap-3">
                     {(currentQ.options || []).map((opt, i) => {
@@ -354,14 +380,19 @@ export function CaseQualifier({
                   )}
                   {(currentQ.type === "multi" ||
                     currentQ.type === "date" ||
-                    currentQ.type === "select") && (
+                    currentQ.type === "select" ||
+                    currentQ.type === "text") && (
                     <button
                       onClick={goNext}
                       disabled={!canAdvance}
                       className="font-bold py-3 px-7 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                       style={submitBtnStyle}
                     >
-                      {step === totalSteps - 1 ? "Continue →" : "Next →"}
+                      {currentQ.optional && !currentAnswer
+                        ? "Skip →"
+                        : step === totalSteps - 1
+                          ? "Continue →"
+                          : "Next →"}
                     </button>
                   )}
                 </div>

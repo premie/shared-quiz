@@ -45,6 +45,11 @@ export async function submitLead({
     `Health injury: ${answers.injury || "—"}`,
     answers.doctor ? `Seen doctor: ${answers.doctor}` : null,
     `Notified party: ${answers.notified || "—"}`,
+    answers.notice_method ? `Notice method: ${answers.notice_method}` : null,
+    answers.notice_date ? `Notice date (approx): ${answers.notice_date}` : null,
+    answers.notice_excerpt
+      ? `Pasted notice text: ${answers.notice_excerpt}`
+      : null,
     answers.response ? `Response: ${answers.response}` : null,
     `Unit access: ${answers.unit_access || "—"}`,
     answers.unit_access_loss_date
