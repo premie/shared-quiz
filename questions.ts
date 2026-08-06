@@ -282,17 +282,17 @@ export const TIER_CONFIG: Record<
   strong: {
     icon: "✅",
     title: "Your Case Looks Strong",
-    body: "Based on your answers, you appear to have a solid mold injury claim. Enter your contact info and an attorney from our team will reach out within 1 business day.",
+    body: "Based on your answers, your situation has the elements a mold injury claim needs. That is not the same as a case we can take — most mold submissions do not become cases. Enter your contact info and we will review it.",
   },
   promising: {
     icon: "👍",
-    title: "Let's Talk About Your Case",
-    body: "Based on your answers, there are some factors we'd like to discuss with you. Enter your info and we'll follow up to evaluate your situation in more detail.",
+    title: "Some Gaps Worth a Look",
+    body: "Based on your answers, there are factors that could keep this from becoming a viable claim. Enter your info and we will review it. Most mold submissions do not become cases.",
   },
   unlikely: {
     icon: "📋",
     title: "We May Not Be the Right Fit",
-    body: "Based on your answers, this may fall outside our current practice area. Enter your info anyway — we review every submission and can point you to the right resources if we can't help directly.",
+    body: "Based on your answers, this likely falls outside what we can take on. You are welcome to enter your info, but expect that we will not be able to help with this one.",
   },
 };
 

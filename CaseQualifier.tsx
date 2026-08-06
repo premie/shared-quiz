@@ -659,17 +659,17 @@ export function CaseQualifier({
                   We&apos;ve Got Your Info
                 </h3>
                 <p className="text-gray-600 mb-6">
-                  Thank you, {contactData.firstName}. Here&apos;s what happens
-                  next: <strong>we&apos;ll reach out by email, not by phone.</strong>{" "}
-                  Mold claims are built on evidence, so we work over email to
-                  collect the records, photos, and documentation needed to
-                  validate your claim.
+                  Thank you, {contactData.firstName}. Being straight with you:{" "}
+                  <strong>most mold submissions do not turn into cases.</strong>{" "}
+                  Mold claims are built on evidence, inspection reports, medical
+                  records, and written notice to the landlord. Without that,
+                  there is usually nothing to bring.
                 </p>
                 <p className="text-sm text-gray-400">
-                  Watch your inbox over the next business day (check your spam
-                  folder too), and start gathering any photos, medical records,
-                  or written communications you have — it&apos;ll help us move
-                  faster.
+                  If we are moving forward, you will hear from us by email, not
+                  by phone. If you do not hear from us, we are not taking the
+                  case. Either way, gathering your photos, medical records, and
+                  written communications is worth doing.
                 </p>
               </div>
             )}

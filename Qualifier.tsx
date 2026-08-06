@@ -352,8 +352,8 @@ export function Qualifier({ config, theme }: QualifierProps) {
                 {submitFailed
                   ? "We couldn’t submit your details automatically — please call so we don’t miss your claim. Your assessment is below."
                   : result.qualifies
-                  ? "We’ve received your details and a member of our team will reach out within one business day."
-                  : "A team member will review your details and follow up — and if it’s a better fit elsewhere, we’ll point you the right way."}
+                  ? "We’ve received your details and they’re queued for review."
+                  : "We’ve received your details and they’re queued for review, though this one may fall outside what we take on."}
               </p>
               {submitFailed && fallbackPhone && (
                 <a href={fallbackPhone.href} className="inline-block mt-4 font-bold rounded-lg px-6 py-3 no-underline transition-opacity hover:opacity-90" style={accentBtn}>
