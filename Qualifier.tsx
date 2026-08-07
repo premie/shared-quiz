@@ -12,7 +12,7 @@ function money(n: number): string {
 }
 
 export function Qualifier({ config, theme }: QualifierProps) {
-  const { questions, classify, intro, brand, fallbackPhone, consentText, legalFooter, confirmationNote } = config;
+  const { questions, classify, intro, brand, fallbackPhone, fallbackEmail, consentText, legalFooter, confirmationNote } = config;
   const bodyText = theme.bodyText ?? "#C2CCDA";
   const mutedText = theme.mutedText ?? "#9FB0C9";
 
@@ -345,20 +345,26 @@ export function Qualifier({ config, theme }: QualifierProps) {
             <div className="text-center">
               <h1 className="font-display font-normal" style={{ fontSize: "clamp(1.8rem,4.4vw,2.7rem)", lineHeight: 1.1 }}>
                 {submitFailed
-                  ? `Almost there${firstName ? `, ${firstName}` : ""} — let’s finish by phone.`
+                  ? `Almost there${firstName ? `, ${firstName}` : ""} — let’s finish ${fallbackPhone ? "by phone" : "by email"}.`
                   : `Thanks${firstName ? `, ${firstName}` : ""} — ${result.qualifies ? "your claim looks worth a closer look." : "we’ve got your details."}`}
               </h1>
               <p className="text-[1.1rem] leading-[1.6] mt-4 mx-auto max-w-[44ch]" style={{ color: bodyText }}>
                 {submitFailed
-                  ? "We couldn’t submit your details automatically — please call so we don’t miss your claim. Your assessment is below."
+                  ? `We couldn’t submit your details automatically — please ${fallbackPhone ? "call" : "email us"} so we don’t miss your claim. Your assessment is below.`
                   : result.qualifies
                   ? "We’ve received your details and they’re queued for review."
                   : "We’ve received your details and they’re queued for review, though this one may fall outside what we take on."}
               </p>
-              {submitFailed && fallbackPhone && (
-                <a href={fallbackPhone.href} className="inline-block mt-4 font-bold rounded-lg px-6 py-3 no-underline transition-opacity hover:opacity-90" style={accentBtn}>
-                  Call {fallbackPhone.display}
-                </a>
+              {submitFailed && (fallbackPhone || fallbackEmail) && (
+                fallbackPhone ? (
+                  <a href={fallbackPhone.href} className="inline-block mt-4 font-bold rounded-lg px-6 py-3 no-underline transition-opacity hover:opacity-90" style={accentBtn}>
+                    Call {fallbackPhone.display}
+                  </a>
+                ) : (
+                  <a href={fallbackEmail!.href} className="inline-block mt-4 font-bold rounded-lg px-6 py-3 no-underline transition-opacity hover:opacity-90" style={accentBtn}>
+                    Email {fallbackEmail!.display}
+                  </a>
+                )
               )}
               {!submitFailed && confirmationNote && (
                 <p className="text-[1.02rem] leading-[1.6] mt-4 mx-auto max-w-[46ch]" style={{ color: mutedText }}>

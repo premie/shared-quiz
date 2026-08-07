@@ -87,6 +87,11 @@ export interface QualifierConfig {
   /** Same-origin POST endpoint. Must fail loud (non-2xx) so we can fall back. */
   submitUrl: string;
   fallbackPhone?: { display: string; href: string };
+  /**
+   * Submit-failure fallback for brands that take no inbound calls (mold is
+   * screened in writing). Used when fallbackPhone is unset.
+   */
+  fallbackEmail?: { display: string; href: string };
   questions: QQuestion[];
   classify: (a: Answers) => QResult;
   intro: QualifierIntro;
