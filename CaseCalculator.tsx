@@ -297,6 +297,29 @@ function fmtMoney(n: number): string {
   return `$${n.toLocaleString()}`;
 }
 
+/**
+ * Carry the contact details the visitor just typed into the qualifier URL, so
+ * the hand-off does not make them retype anything.
+ *
+ * The Qualifier engine seeds `name`, `phone` and `email` from the query string
+ * on mount (plus any key matching a question id or field key) and ignores
+ * everything else, so these three are the safe, stable set. Any query string
+ * already on the href is preserved.
+ */
+function withContactPrefill(
+  href: string,
+  contact: { firstName: string; lastName: string; phone: string; email: string }
+): string {
+  const [path, existing] = href.split("?");
+  const params = new URLSearchParams(existing || "");
+  const name = `${contact.firstName} ${contact.lastName}`.replace(/\s+/g, " ").trim();
+  if (name) params.set("name", name);
+  if (contact.phone.trim()) params.set("phone", contact.phone.trim());
+  if (contact.email.trim()) params.set("email", contact.email.trim());
+  const qs = params.toString();
+  return qs ? `${path}?${qs}` : path;
+}
+
 // Self-contained GA4 funnel tracking. The calculator lives in a shared lib
 // consumed by different hosts, so it calls window.gtag directly (guarded)
 // rather than importing any host app's analytics helper. Measures the funnel:
@@ -317,6 +340,7 @@ export function CaseCalculator({
   acknowledgementText = DEFAULT_ACK,
   perScreenDisclaimer = DEFAULT_PER_SCREEN,
   consultHref = "/free-consultation",
+  qualifierHref,
 }: CaseCalculatorProps) {
   const t = { ...DEFAULT_THEME, ...theme };
 
@@ -931,7 +955,39 @@ export function CaseCalculator({
               </>
             )}
 
-            {phase === "done" && (
+            {phase === "done" && qualifierHref && (
+              <div className="p-12 text-center">
+                <div className="text-5xl mb-4">📩</div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                  Estimate saved. One more step to get it reviewed.
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  Thank you, {contact.firstName}. Being straight with you:{" "}
+                  <strong>most mold submissions do not turn into cases.</strong>{" "}
+                  An estimate is a range, not a case. What decides it is written
+                  notice to the landlord, access to the property, inspection
+                  results, and medical records, and the calculator does not ask
+                  about those. The case evaluation does, and it takes about two
+                  minutes.
+                </p>
+                <a
+                  href={withContactPrefill(qualifierHref, contact)}
+                  className="inline-flex items-center gap-2 rounded-full px-8 py-4 text-base font-bold shadow-xl transition hover:brightness-105"
+                  style={{ background: t.accentBg, color: t.accentText }}
+                >
+                  Start the case evaluation →
+                </a>
+                <p className="text-sm text-gray-400 mt-6">
+                  Your name and contact details carry over. If we are moving
+                  forward, you will hear from us by email, not by phone. If you
+                  do not hear from us, we are not taking the case. Either way,
+                  gathering your photos, medical records, and written
+                  communications is worth doing.
+                </p>
+              </div>
+            )}
+
+            {phase === "done" && !qualifierHref && (
               <div className="p-12 text-center">
                 <div className="text-5xl mb-4">📩</div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">

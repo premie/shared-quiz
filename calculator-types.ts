@@ -103,4 +103,15 @@ export interface CaseCalculatorProps {
   perScreenDisclaimer?: string;
   /** Where "talk to an attorney" links (per brand). */
   consultHref?: string;
+  /**
+   * Where the case qualifier lives (per brand). When set, the post-submit screen
+   * becomes a hand-off to it rather than a thank-you.
+   *
+   * An estimate is a range; the qualifier is what establishes whether there is a
+   * claim, and downstream steps are gated on its answers (os-conduit only
+   * provisions a mold document portal for a real qualifier submission). So
+   * finishing the calculator is the middle of the funnel, not the end. The lead
+   * is already captured, so nothing is lost if the visitor stops here.
+   */
+  qualifierHref?: string;
 }
