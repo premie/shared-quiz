@@ -3,11 +3,10 @@
 import { useState, useCallback, type CSSProperties } from "react";
 import {
   QUESTIONS,
-  TIER_CONFIG,
-  OUT_OF_COVERAGE_RESULT,
   computeFlags,
   computeScore,
   getTier,
+  resolveResultConfig,
 } from "./questions";
 import { submitLead } from "./submit";
 import type {
@@ -221,11 +220,9 @@ export function CaseQualifier({
   const flags = computeFlags(answers);
   const score = computeScore(flags);
   const tier = getTier(flags, score);
-  // Out-of-coverage overrides the result copy with an honest expectation-setting
-  // message on every tier, while the lead still submits (with its real state).
-  const tierConfig = flags.includes("OUT_OF_COVERAGE")
-    ? OUT_OF_COVERAGE_RESULT
-    : TIER_CONFIG[tier];
+  // Workplace and out-of-coverage override the generic tier copy with an
+  // honest expectation-setting message. The lead still submits either way.
+  const tierConfig = resolveResultConfig(flags, tier);
 
   const letters = "ABCDEFGHIJ";
 
@@ -403,7 +400,10 @@ export function CaseQualifier({
             {phase === "contact" && (
               <div className="p-8 text-center">
                 <div className="text-5xl mb-4">{tierConfig.icon}</div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                <h3
+                  className="text-xl font-bold text-gray-900 mb-2"
+                  data-testid="qualifier-result-title"
+                >
                   {tierConfig.title}
                 </h3>
                 <p className="text-sm text-gray-500 mb-8 max-w-md mx-auto">

@@ -432,6 +432,12 @@ export function CaseCalculator({
     if (!allStepsComplete) return;
     const r = computeResult(inputs as CalculatorInputs);
     setResult(r);
+    // Unlikely paths have no estimate to gate. Skip the acknowledgement so
+    // the visitor sees the honest reason and can still leave contact info.
+    if (r.type === "unlikely-case") {
+      setPhase("contact");
+      return;
+    }
     // Gate the reveal: user must accept the acknowledgement before the estimate shows.
     setPhase("acknowledge");
   };
@@ -565,7 +571,10 @@ export function CaseCalculator({
           <div className="text-5xl mb-4">
             {result.type === "unlikely-case" ? "📋" : "⚠️"}
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">
+          <h3
+            className="text-xl font-bold text-gray-900 mb-2"
+            data-testid="calculator-result-title"
+          >
             {result.title}
           </h3>
           <p className="text-sm text-gray-600 max-w-md mx-auto">
@@ -789,12 +798,16 @@ export function CaseCalculator({
                 {renderResult()}
                 <div className="p-8 border-t border-gray-200">
                   <h3 className="text-lg font-bold text-gray-900 mb-1">
-                    Get a free attorney evaluation
+                    {result?.type === "unlikely-case" &&
+                    result.reason === "workplace"
+                      ? "Leave your info if we should look again"
+                      : "Get a free attorney evaluation"}
                   </h3>
                   <p className="text-sm text-gray-600 mb-5">
-                    Enter your info and we will review your specific facts.
-                    Most mold submissions do not turn into cases, so treat this
-                    as a screen, not a sign-up.
+                    {result?.type === "unlikely-case" &&
+                    result.reason === "workplace"
+                      ? "If this was actually a rental, we will review it. If it was workplace mold, we will keep a record and will not take the case."
+                      : "Enter your info and we will review your specific facts. Most mold submissions do not turn into cases, so treat this as a screen, not a sign-up."}
                   </p>
                   <div className="space-y-4">
                     <div className="grid sm:grid-cols-2 gap-4">

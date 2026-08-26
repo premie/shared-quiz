@@ -20,9 +20,12 @@ export {
   QUESTIONS,
   TIER_CONFIG,
   STATE_CODES,
+  OUT_OF_COVERAGE_RESULT,
+  WORKPLACE_EXPOSURE_RESULT,
   computeFlags,
   computeScore,
   getTier,
+  resolveResultConfig,
 } from "./questions";
 export { submitLead } from "./submit";
 export type {

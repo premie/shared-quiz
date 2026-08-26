@@ -6,7 +6,7 @@ export const QUESTIONS: Question[] = [
     id: "property_type",
     type: "single",
     text: "Where were you exposed to mold?",
-    sub: "Select the type of property where the mold exposure occurred.",
+    sub: "Select where the exposure happened. We represent residential tenants. Workplace mold is not a case we take — you can still tell us so we have a record.",
     options: [
       "Apartment or rental home",
       "Home I own",
@@ -308,3 +308,18 @@ export const OUT_OF_COVERAGE_RESULT = {
   title: "We May Not Be Able to Take This One",
   body: "Your property is outside the states where we're licensed (Arizona, California, Colorado, and Kansas), so we can't promise to represent you. Share your details and we'll review your case. If it's strong we may be able to bring in local counsel, and if we can't help directly we'll point you toward a qualified mold attorney in your state.",
 } as const;
+
+/** Shown when the visitor said the exposure was at work. Still captures the
+ *  lead (they may have mis-clicked, or we want a record) but states the
+ *  practice limit in plain language — workplace mold is not a case we take. */
+export const WORKPLACE_EXPOSURE_RESULT = {
+  icon: "📋",
+  title: "We Don't Handle Workplace Mold",
+  body: "Our mold practice is limited to residential tenants — apartments and rental homes where a landlord or property manager is responsible. Workplace mold goes through workers' compensation, not our team. If the exposure was actually in a home you rent, leave your info and we'll look again. If it was at work, you can still submit so we have a record, but we will not be able to take the case.",
+} as const;
+
+export function resolveResultConfig(flags: string[], tier: Tier) {
+  if (flags.includes("WORKPLACE_EXPOSURE")) return WORKPLACE_EXPOSURE_RESULT;
+  if (flags.includes("OUT_OF_COVERAGE")) return OUT_OF_COVERAGE_RESULT;
+  return TIER_CONFIG[tier];
+}
