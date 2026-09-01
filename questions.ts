@@ -54,7 +54,7 @@ export const QUESTIONS: Question[] = [
     id: "injury",
     type: "single",
     text: "Have you or someone in your household experienced health issues from the mold?",
-    sub: "Examples: respiratory problems, skin rashes, chronic cough, headaches, fatigue, asthma flares.",
+    sub: "Examples: respiratory problems, skin rashes, chronic cough, headaches, fatigue, asthma flares, hair loss.",
     options: [
       "Yes — I personally have symptoms",
       "Yes — a family member or co-occupant",
