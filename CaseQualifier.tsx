@@ -9,6 +9,7 @@ import {
   resolveResultConfig,
 } from "./questions";
 import { submitLead } from "./submit";
+import { TurnstileField } from "./turnstile";
 import type {
   Answers,
   CaseQualifierProps,
@@ -74,6 +75,11 @@ export function CaseQualifier({
     notes: "",
   });
   const [consentShare, setConsentShare] = useState(false);
+  // Opt-in bot protection (config.turnstileSiteKey). The token is single-use, so
+  // a failed submit remounts the widget (captchaKey) for a fresh one.
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaKey, setCaptchaKey] = useState(0);
+  const [honeypot, setHoneypot] = useState("");
 
   const activeQuestions = QUESTIONS.filter((q) => !q.skip || !q.skip(answers));
   const totalSteps = activeQuestions.length;
@@ -204,6 +210,8 @@ export function CaseQualifier({
         tier,
         score,
         flags,
+        captchaToken,
+        honeypot,
       });
       setPhase("done");
     } catch (err) {
@@ -212,6 +220,10 @@ export function CaseQualifier({
       // lead isn't lost.
       console.error("Case qualifier submission failed:", err);
       setSubmitFailed(true);
+      if (config.turnstileSiteKey) {
+        setCaptchaToken("");
+        setCaptchaKey((k) => k + 1);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -613,6 +625,33 @@ export function CaseQualifier({
                         </p>
                       )}
                     </div>
+                  )}
+
+                  {config.turnstileSiteKey && (
+                    <>
+                      {/* Honeypot: off-screen, skipped by keyboard and screen readers. */}
+                      <div
+                        aria-hidden="true"
+                        style={{ position: "absolute", left: "-10000px", width: 1, height: 1, overflow: "hidden" }}
+                      >
+                        <label htmlFor="cq-website">Website</label>
+                        <input
+                          id="cq-website"
+                          name="website"
+                          type="text"
+                          tabIndex={-1}
+                          autoComplete="off"
+                          value={honeypot}
+                          onChange={(e) => setHoneypot(e.target.value)}
+                        />
+                      </div>
+                      <TurnstileField
+                        key={captchaKey}
+                        siteKey={config.turnstileSiteKey}
+                        action="case_qualifier"
+                        onToken={setCaptchaToken}
+                      />
+                    </>
                   )}
 
                   <button
