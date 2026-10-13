@@ -18,13 +18,7 @@
 export async function deliverLead(
   url: string,
   payload: unknown,
-  {
-    maxAttempts = 3,
-    timeoutMs = 10000,
-    // A payload carrying a single-use captcha token must not be re-sent after a
-    // 5xx: the relay already spent the token, so the retry can only fail.
-    retryServerErrors = true,
-  }: { maxAttempts?: number; timeoutMs?: number; retryServerErrors?: boolean } = {},
+  { maxAttempts = 3, timeoutMs = 10000 }: { maxAttempts?: number; timeoutMs?: number } = {},
 ): Promise<void> {
   let lastError: unknown = null;
 
@@ -41,7 +35,7 @@ export async function deliverLead(
       if (res.ok) return; // delivered + durably stored by the receiver
       // 4xx = permanent rejection (won't succeed on retry); 5xx = transient.
       lastError = new Error(`Lead receiver responded HTTP ${res.status}`);
-      if (res.status < 500 || !retryServerErrors) break;
+      if (res.status < 500) break;
     } catch (err) {
       lastError = err;
     } finally {

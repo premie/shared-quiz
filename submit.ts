@@ -133,7 +133,12 @@ export async function submitLead({
 
   // Deliver to the single central receiver via the shared hardened path.
   // Throws on final failure so the caller shows a real fallback (see deliver.ts).
-  await deliverLead(config.conduitWebhookUrl, conduitPayload, {
-    retryServerErrors: !captchaToken,
-  });
+  // A single-use captcha token gets exactly one attempt: after a timeout or 5xx
+  // the relay may already have spent it, so a retry could only fail. The UI
+  // remounts the widget on failure and the next submit carries a fresh token.
+  await deliverLead(
+    config.conduitWebhookUrl,
+    conduitPayload,
+    captchaToken ? { maxAttempts: 1 } : {},
+  );
 }

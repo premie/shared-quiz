@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, type CSSProperties } from "react";
+import { useState, useCallback, useRef, type CSSProperties } from "react";
 import {
   QUESTIONS,
   computeFlags,
@@ -80,6 +80,25 @@ export function CaseQualifier({
   const [captchaToken, setCaptchaToken] = useState("");
   const [captchaKey, setCaptchaKey] = useState(0);
   const [honeypot, setHoneypot] = useState("");
+  // Latest token + waiters, so a submit that races the (re)mounted widget can
+  // wait briefly for its token instead of going out tokenless.
+  const tokenRef = useRef("");
+  const tokenWaiters = useRef<Array<(t: string) => void>>([]);
+  const onCaptchaToken = useCallback((t: string) => {
+    tokenRef.current = t;
+    setCaptchaToken(t);
+    if (t) {
+      tokenWaiters.current.forEach((resolve) => resolve(t));
+      tokenWaiters.current = [];
+    }
+  }, []);
+  const awaitCaptchaToken = (ms: number) =>
+    tokenRef.current
+      ? Promise.resolve(tokenRef.current)
+      : new Promise<string>((resolve) => {
+          tokenWaiters.current.push(resolve);
+          setTimeout(() => resolve(tokenRef.current), ms);
+        });
 
   const activeQuestions = QUESTIONS.filter((q) => !q.skip || !q.skip(answers));
   const totalSteps = activeQuestions.length;
@@ -202,6 +221,10 @@ export function CaseQualifier({
     const tier = getTier(flags, score);
 
     try {
+      // Widget on the page but no token yet (still loading, or just remounted
+      // after a failed submit): wait up to 3s for one, then send regardless;
+      // the relay's captcha policy handles a tokenless lead.
+      const token = config.turnstileSiteKey ? await awaitCaptchaToken(3000) : "";
       await submitLead({
         config,
         answers,
@@ -210,7 +233,7 @@ export function CaseQualifier({
         tier,
         score,
         flags,
-        captchaToken,
+        captchaToken: token || captchaToken,
         honeypot,
       });
       setPhase("done");
@@ -221,7 +244,7 @@ export function CaseQualifier({
       console.error("Case qualifier submission failed:", err);
       setSubmitFailed(true);
       if (config.turnstileSiteKey) {
-        setCaptchaToken("");
+        onCaptchaToken("");
         setCaptchaKey((k) => k + 1);
       }
     } finally {
@@ -649,7 +672,7 @@ export function CaseQualifier({
                         key={captchaKey}
                         siteKey={config.turnstileSiteKey}
                         action="case_qualifier"
-                        onToken={setCaptchaToken}
+                        onToken={onCaptchaToken}
                       />
                     </>
                   )}
