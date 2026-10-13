@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, type CSSProperties } from "react";
+import { useState, useCallback, useRef, type CSSProperties } from "react";
 import {
   QUESTIONS,
   computeFlags,
@@ -9,6 +9,7 @@ import {
   resolveResultConfig,
 } from "./questions";
 import { submitLead } from "./submit";
+import { TurnstileField } from "./turnstile";
 import type {
   Answers,
   CaseQualifierProps,
@@ -74,6 +75,30 @@ export function CaseQualifier({
     notes: "",
   });
   const [consentShare, setConsentShare] = useState(false);
+  // Opt-in bot protection (config.turnstileSiteKey). The token is single-use, so
+  // a failed submit remounts the widget (captchaKey) for a fresh one.
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaKey, setCaptchaKey] = useState(0);
+  const [honeypot, setHoneypot] = useState("");
+  // Latest token + waiters, so a submit that races the (re)mounted widget can
+  // wait briefly for its token instead of going out tokenless.
+  const tokenRef = useRef("");
+  const tokenWaiters = useRef<Array<(t: string) => void>>([]);
+  const onCaptchaToken = useCallback((t: string) => {
+    tokenRef.current = t;
+    setCaptchaToken(t);
+    if (t) {
+      tokenWaiters.current.forEach((resolve) => resolve(t));
+      tokenWaiters.current = [];
+    }
+  }, []);
+  const awaitCaptchaToken = (ms: number) =>
+    tokenRef.current
+      ? Promise.resolve(tokenRef.current)
+      : new Promise<string>((resolve) => {
+          tokenWaiters.current.push(resolve);
+          setTimeout(() => resolve(tokenRef.current), ms);
+        });
 
   const activeQuestions = QUESTIONS.filter((q) => !q.skip || !q.skip(answers));
   const totalSteps = activeQuestions.length;
@@ -196,6 +221,10 @@ export function CaseQualifier({
     const tier = getTier(flags, score);
 
     try {
+      // Widget on the page but no token yet (still loading, or just remounted
+      // after a failed submit): wait up to 3s for one, then send regardless;
+      // the relay's captcha policy handles a tokenless lead.
+      const token = config.turnstileSiteKey ? await awaitCaptchaToken(3000) : "";
       await submitLead({
         config,
         answers,
@@ -204,6 +233,8 @@ export function CaseQualifier({
         tier,
         score,
         flags,
+        captchaToken: token || captchaToken,
+        honeypot,
       });
       setPhase("done");
     } catch (err) {
@@ -212,6 +243,10 @@ export function CaseQualifier({
       // lead isn't lost.
       console.error("Case qualifier submission failed:", err);
       setSubmitFailed(true);
+      if (config.turnstileSiteKey) {
+        onCaptchaToken("");
+        setCaptchaKey((k) => k + 1);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -613,6 +648,33 @@ export function CaseQualifier({
                         </p>
                       )}
                     </div>
+                  )}
+
+                  {config.turnstileSiteKey && (
+                    <>
+                      {/* Honeypot: off-screen, skipped by keyboard and screen readers. */}
+                      <div
+                        aria-hidden="true"
+                        style={{ position: "absolute", left: "-10000px", width: 1, height: 1, overflow: "hidden" }}
+                      >
+                        <label htmlFor="cq-website">Website</label>
+                        <input
+                          id="cq-website"
+                          name="website"
+                          type="text"
+                          tabIndex={-1}
+                          autoComplete="off"
+                          value={honeypot}
+                          onChange={(e) => setHoneypot(e.target.value)}
+                        />
+                      </div>
+                      <TurnstileField
+                        key={captchaKey}
+                        siteKey={config.turnstileSiteKey}
+                        action="case_qualifier"
+                        onToken={onCaptchaToken}
+                      />
+                    </>
                   )}
 
                   <button

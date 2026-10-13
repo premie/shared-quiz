@@ -22,6 +22,9 @@ export interface SubmitArgs {
   tier: Tier;
   score: number;
   flags: string[];
+  /** Only sent when the site opted into Turnstile (config.turnstileSiteKey). */
+  captchaToken?: string;
+  honeypot?: string;
 }
 
 export async function submitLead({
@@ -32,6 +35,8 @@ export async function submitLead({
   tier,
   score,
   flags,
+  captchaToken,
+  honeypot,
 }: SubmitArgs): Promise<void> {
   const descLines = [
     `Tier: ${tier} (score ${score}/10)`,
@@ -121,9 +126,19 @@ export async function submitLead({
     priority_score: score,
     flags,
     consent_expert_share: consentShare,
+    ...(config.turnstileSiteKey
+      ? { captchaToken: captchaToken || "", honeypot: honeypot || "" }
+      : {}),
   };
 
   // Deliver to the single central receiver via the shared hardened path.
   // Throws on final failure so the caller shows a real fallback (see deliver.ts).
-  await deliverLead(config.conduitWebhookUrl, conduitPayload);
+  // A single-use captcha token gets exactly one attempt: after a timeout or 5xx
+  // the relay may already have spent it, so a retry could only fail. The UI
+  // remounts the widget on failure and the next submit carries a fresh token.
+  await deliverLead(
+    config.conduitWebhookUrl,
+    conduitPayload,
+    captchaToken ? { maxAttempts: 1 } : {},
+  );
 }
