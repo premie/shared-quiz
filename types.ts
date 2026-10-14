@@ -34,6 +34,14 @@ export interface CaseQualifierConfig {
    */
   fallbackPhone?: string;
   fallbackEmail?: string;
+  /**
+   * Cloudflare Turnstile site key. Opt-in: when set, the form renders an
+   * interaction-only Turnstile widget plus a hidden honeypot field and sends
+   * `captchaToken` / `honeypot` with the lead. Only set it when
+   * `conduitWebhookUrl` points at the site's OWN server relay that verifies the
+   * token; the central receiver ignores both fields.
+   */
+  turnstileSiteKey?: string;
 }
 
 export interface CaseQualifierTheme {

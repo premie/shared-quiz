@@ -153,6 +153,15 @@ function roundTo(n: number, step: number): number {
 
 export function computeResult(i: CalculatorInputs): CalculatorResult {
   // ── Disqualifying paths ──
+  if (i.property_type === "workplace") {
+    return {
+      type: "unlikely-case",
+      reason: "workplace",
+      title: "We Don't Handle Workplace Mold",
+      message:
+        "Our mold practice is limited to residential tenants. Workplace mold is a workers' compensation matter, not a case we take. You can still leave your info so we have a record, or so we can look again if the exposure was actually in a home you rent. We will not put a value on a workplace claim.",
+    };
+  }
   if (i.property_type === "owned") {
     return {
       type: "unlikely-case",
