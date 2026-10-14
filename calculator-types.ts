@@ -4,6 +4,7 @@ export type SeverityTier = "mild" | "moderate" | "severe" | "catastrophic";
 
 export type DisqualifyReason =
   | "homeowner"
+  | "workplace"
   | "hoa"
   | "out-of-state"
   | "hotel-str"
