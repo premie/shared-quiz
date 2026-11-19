@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, type CSSProperties } from "react";
+import { useState, useCallback, useEffect, useRef, type CSSProperties } from "react";
 import {
   QUESTIONS,
   computeFlags,
@@ -9,6 +9,7 @@ import {
   resolveResultConfig,
 } from "./questions";
 import { submitLead } from "./submit";
+import { PREFILL_NOTICE, fetchPrefill, readLeadToken } from "./prefill";
 import { TurnstileField } from "./turnstile";
 import type {
   Answers,
@@ -75,6 +76,26 @@ export function CaseQualifier({
     notes: "",
   });
   const [consentShare, setConsentShare] = useState(false);
+  // Pre-filled link (config.prefillUrl + ?token=): the lead token rides the
+  // submission, and `prefilled` shows the "please check" line.
+  const [leadToken, setLeadToken] = useState<string | null>(null);
+  const [prefilled, setPrefilled] = useState(false);
+  useEffect(() => {
+    if (!config.prefillUrl || typeof window === "undefined") return;
+    const token = readLeadToken(window.location.search);
+    if (!token) return;
+    setLeadToken(token);
+    let cancelled = false;
+    fetchPrefill(config.prefillUrl, token, QUESTIONS).then((prefill) => {
+      if (cancelled || Object.keys(prefill).length === 0) return;
+      // Anything the visitor already picked while this loaded wins.
+      setAnswers((prev) => ({ ...prefill, ...prev }));
+      setPrefilled(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [config.prefillUrl]);
   // Opt-in bot protection (config.turnstileSiteKey). The token is single-use, so
   // a failed submit remounts the widget (captchaKey) for a fresh one.
   const [captchaToken, setCaptchaToken] = useState("");
@@ -235,6 +256,7 @@ export function CaseQualifier({
         flags,
         captchaToken: token || captchaToken,
         honeypot,
+        qualifierToken: leadToken,
       });
       setPhase("done");
     } catch (err) {
@@ -307,6 +329,15 @@ export function CaseQualifier({
             {/* Quiz Phase */}
             {phase === "quiz" && currentQ && (
               <div className="p-8">
+                {prefilled && (
+                  <p
+                    className="mb-5 rounded-lg px-4 py-3 text-sm text-gray-700"
+                    style={{ backgroundColor: t.accentSoftBg }}
+                    data-testid="qualifier-prefill-notice"
+                  >
+                    {config.prefillNotice || PREFILL_NOTICE}
+                  </p>
+                )}
                 <p
                   className="text-xs font-bold uppercase tracking-wider mb-2"
                   style={accentTextStyle}
@@ -413,7 +444,10 @@ export function CaseQualifier({
                   {(currentQ.type === "multi" ||
                     currentQ.type === "date" ||
                     currentQ.type === "select" ||
-                    currentQ.type === "text") && (
+                    currentQ.type === "text" ||
+                    // A pre-filled single answer can be confirmed with Next
+                    // (picking an option still advances as before).
+                    (prefilled && currentQ.type === "single" && !!currentAnswer)) && (
                     <button
                       onClick={goNext}
                       disabled={!canAdvance}

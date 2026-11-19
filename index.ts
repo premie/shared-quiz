@@ -28,6 +28,7 @@ export {
   resolveResultConfig,
 } from "./questions";
 export { submitLead } from "./submit";
+export { PREFILL_NOTICE, fetchPrefill, readLeadToken, sanitizePrefill } from "./prefill";
 export type {
   Answers,
   Question,

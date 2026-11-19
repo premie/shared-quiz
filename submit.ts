@@ -25,6 +25,8 @@ export interface SubmitArgs {
   /** Only sent when the site opted into Turnstile (config.turnstileSiteKey). */
   captchaToken?: string;
   honeypot?: string;
+  /** Lead qualifier token from a pre-filled link (config.prefillUrl only). */
+  qualifierToken?: string | null;
 }
 
 export async function submitLead({
@@ -37,6 +39,7 @@ export async function submitLead({
   flags,
   captchaToken,
   honeypot,
+  qualifierToken,
 }: SubmitArgs): Promise<void> {
   const descLines = [
     `Tier: ${tier} (score ${score}/10)`,
@@ -129,6 +132,8 @@ export async function submitLead({
     ...(config.turnstileSiteKey
       ? { captchaToken: captchaToken || "", honeypot: honeypot || "" }
       : {}),
+    // Binds the submission to the lead the pre-filled link was minted for.
+    ...(config.prefillUrl && qualifierToken ? { qualifier_token: qualifierToken } : {}),
   };
 
   // Deliver to the single central receiver via the shared hardened path.

@@ -42,6 +42,18 @@ export interface CaseQualifierConfig {
    * token; the central receiver ignores both fields.
    */
   turnstileSiteKey?: string;
+  /**
+   * Pre-filled qualifier for referred leads. Opt-in: when set and the page URL
+   * carries `?token=<lead qualifier token>`, the form GETs
+   * `${prefillUrl}?token=...`, pre-selects the returned answers (only values
+   * that are valid options), shows `prefillNotice`, and sends the token as
+   * `qualifier_token` so the submission merges onto that lead. The client still
+   * answers or confirms every question and submits. Without a token, nothing
+   * changes.
+   */
+  prefillUrl?: string;
+  /** Line shown above the questions when answers were pre-filled. */
+  prefillNotice?: string;
 }
 
 export interface CaseQualifierTheme {
