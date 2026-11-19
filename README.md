@@ -40,6 +40,17 @@ import { CaseQualifier } from "shared-quiz";
 
 Defaults match Mold Law King branding (purple header, gold accent).
 
+### Pre-filled qualifier (opt-in)
+
+Set `config.prefillUrl` (conduit.law points it at os-conduit
+`/api/mold-qualifier/prefill`). When the page is opened with
+`?token=<lead qualifier token>`, the form fetches answers mapped from a
+referral partner's intake (Mold Case Consulting), pre-selects the ones that are
+valid current options, shows a "please check each answer" line, and submits the
+token as `qualifier_token` so the lead merges onto the referred lead. The client
+still confirms every question and submits. No token, or no `prefillUrl`:
+unchanged. Logic and tests: `prefill.ts`, `prefill.test.ts`.
+
 ## Consuming as a git submodule
 
 ```bash
